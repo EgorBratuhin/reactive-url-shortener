@@ -1,0 +1,310 @@
+openapi: 3.1.2
+info:
+  title: Reactive URL Shortener API
+  description: |
+    High-performance reactive URL shortening service.
+  version: 1.0.0
+  contact:
+    name: Egor Bratukhin
+    url: https://github.com/EgorBratuhin/reactive-url-shortener
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+tags:
+  - name: URLs
+    description: Create and manage short URLs
+  - name: Redirect
+    description: Resolve short URLs and redirect
+
+paths:
+  /urls:
+    post:
+      tags:
+        - URLs
+      summary: Create a short URL
+      description: |
+        Creates a shortened URL from a long URL.
+      operationId: createShortUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUrlRequest'
+            examples:
+              validUrl:
+                summary: Valid HTTPS URL
+                value:
+                  url: "https://example.com/very/long/path/to/resource"
+              withTtl:
+                summary: URL with custom expiration
+                value:
+                  url: "https://example.com/temp-link"
+                  ttlSeconds: 86400
+      responses:
+        '201':
+          description: Short URL created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlMetadata'
+              examples:
+                success:
+                  value:
+                    shortUrl: "http://localhost:8080/0330bhML322HMHIolUI760"
+                    originalUrl: "https://example.com/very/long/path"
+                    shortCode: "0330bhML322HMHIolUI760"
+                    createdAt: "2026-01-31T23:59:59Z"
+                    expiresAt: "2026-12-31T23:59:59Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - URLs
+      summary: List all shortened URLs (paginated)
+      description: Returns a paginated list of all created short URLs
+      operationId: listShortUrls
+      parameters:
+        - $ref: '#/components/parameters/NextCursor'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated list of URLs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlListResponse'
+
+  /urls/{shortCode}:
+    get:
+      tags:
+        - URLs
+      summary: Get URL metadata
+      description: Retrieve metadata for a short URL without redirecting
+      operationId: getUrlMetadata
+      parameters:
+        - $ref: '#/components/parameters/ShortCode'
+      responses:
+        '200':
+          description: URL metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlMetadata'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - URLs
+      summary: Delete a short URL
+      description: Permanently delete a short URL
+      operationId: deleteShortUrl
+      parameters:
+        - $ref: '#/components/parameters/ShortCode'
+      responses:
+        '204':
+          description: URL deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /{shortCode}:
+    get:
+      tags:
+        - Redirect
+      summary: Resolve and redirect
+      description: |
+        Resolves a short code and redirects to the original URL.
+        This endpoint is rate-limited separately from API endpoints.
+      operationId: resolveAndRedirect
+      parameters:
+        - $ref: '#/components/parameters/ShortCode'
+      responses:
+        '302':
+          description: Redirect to original URL
+          headers:
+            Location:
+              description: Original URL
+              schema:
+                type: string
+                format: uri
+              example: "https://example.com/very/long/path"
+            Cache-Control:
+              description: Caching directive for browsers
+              schema:
+                type: string
+              example: "no-cache"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: URL has expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "URL_EXPIRED"
+                message: "This short URL has expired"
+                timestamp: "2026-01-15T10:30:00Z"
+
+components:
+  parameters:
+    ShortCode:
+      name: shortCode
+      in: path
+      required: true
+      description: Base62-encoded short code (22 alphanumeric characters)
+      schema:
+        type: string
+        pattern: '^[0-9A-Za-z]{22}$'
+        minLength: 22
+        maxLength: 22
+        example: "0330bhML322HMHIolUI760"
+
+    NextCursor:
+      name: nextCursor
+      in: query
+      description: Next cursor
+      required: false
+      schema:
+        type: string
+
+    PageSize:
+      name: size
+      in: query
+      description: Maximum number of items to return
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    CreateUrlRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Original URL to shorten
+          example: "https://example.com/very/long/path"
+        ttlSeconds:
+          type: integer
+          description: Time-to-live in seconds (default 90 days)
+          minimum: 60
+          maximum: 7776000
+          default: 7776000
+          example: 86400
+
+    UrlMetadata:
+      type: object
+      required:
+        - shortCode
+        - originalUrl
+        - createdAt
+      properties:
+        shortCode:
+          type: string
+          example: "0330bhML322HMHIolUI760"
+        shortUrl:
+          type: string
+          format: uri
+          example: "http://localhost:8080/1A2b3C4d5E6f"
+        originalUrl:
+          type: string
+          format: uri
+          example: "https://example.com/very/long/path"
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    UrlListResponse:
+      type: object
+      required:
+        - items
+        - hasNext
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UrlMetadata'
+        hasNext:
+          type: boolean
+          description: Has next page
+          default: false
+        nextCursor:
+          type: string
+          description: Next cursor
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - timestamp
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "INVALID_URL"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The provided URL is invalid"
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error context
+        traceId:
+          type: string
+          description: Request trace ID for debugging
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidUrl:
+              value:
+                code: "INVALID_URL"
+                message: "The provided URL is not valid"
+                timestamp: "2026-01-15T10:30:00Z"
+                traceId: "abc123def456"
+
+    NotFound:
+      description: Short URL not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "URL_NOT_FOUND"
+            message: "Short URL with code '1A2b3C4d5E6f' not found"
+            timestamp: "2026-01-15T10:30:00Z"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "An unexpected error occurred"
+            timestamp: "2026-01-15T10:30:00Z"
+            traceId: "abc123def456"

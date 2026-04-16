@@ -1,0 +1,12 @@
+[versions]
+fasterxml-uuid-generator = "5.2.0"
+srp-contract = "0.9.0"
+
+[libraries]
+fasterxml-uuid-generator = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "fasterxml-uuid-generator" }
+srp-contract = { module = "org.srplib:srp-contract", version.ref = "srp-contract" }
+
+[bundles]
+srplib = ["srp-contract"]
+
+[plugins]

@@ -1,0 +1,7 @@
+*.bat text eol=crlf
+*.jar binary
+# Force LF line ending for shell scripts
+*.sh text eol=lf
+*.ldif text eol=lf
+gradlew text eol=lf
+csbuild text eol=lf

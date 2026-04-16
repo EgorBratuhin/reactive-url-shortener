@@ -1,0 +1,9 @@
+[versions]
+archunit = "1.4.1"
+
+[libraries]
+archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
+
+[bundles]
+
+[plugins]

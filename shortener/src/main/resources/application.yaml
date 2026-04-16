@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: reactive-url-shortener
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/shortener
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    display-request-duration: true
+app:
+  short-link-base: http://localhost:8080
