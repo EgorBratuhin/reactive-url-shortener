@@ -1,7 +1,6 @@
 package by.bratukhin.shortener.service;
 
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +19,6 @@ import com.fasterxml.uuid.Generators;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.repository.ShortLinkRepository;
 import by.bratukhin.shortener.support.ItemsPage;
-import io.seruco.encoding.base62.Base62;
 import reactor.core.publisher.Mono;
 
 ///
@@ -29,21 +27,18 @@ import reactor.core.publisher.Mono;
 @Service
 class UrlShortenerServiceImpl implements UrlShortenerService {
 
-    private static final char SHORT_CODE_PADDING_CHAR = '0';
-
-    private static final int SHORT_CODE_LENGTH = 22;
-
-    public static final int UUID_BYTE_LENGTH = Long.BYTES * 2;
-
-    private final Base62 base62 = Base62.createInstance();
-
     private final ShortLinkRepository shortLinkRepository;
 
     private final R2dbcEntityTemplate template;
 
-    UrlShortenerServiceImpl(ShortLinkRepository shortLinkRepository, R2dbcEntityTemplate template) {
+    private final ShortCodeEncoder shortCodeEncoder;
+
+    UrlShortenerServiceImpl(ShortLinkRepository shortLinkRepository, R2dbcEntityTemplate template,
+        ShortCodeEncoder shortCodeEncoder) {
+
         this.shortLinkRepository = shortLinkRepository;
         this.template = template;
+        this.shortCodeEncoder = shortCodeEncoder;
     }
 
     @Override
@@ -61,21 +56,11 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
         ShortLink shortLink = new ShortLink();
         shortLink.setId(id);
         shortLink.setNew(true);
-        shortLink.setShortCode(encode(id));
+        shortLink.setShortCode(shortCodeEncoder.encode(id));
         shortLink.setOriginalUrl(uri.toString());
         shortLink.setExpiresAt(Instant.now().plusSeconds(ttlSeconds));
 
         return shortLink;
-    }
-
-    private String encode(UUID uuid) {
-        ByteBuffer buffer = ByteBuffer.wrap(new byte[UUID_BYTE_LENGTH]);
-        buffer.putLong(uuid.getMostSignificantBits());
-        buffer.putLong(uuid.getLeastSignificantBits());
-
-        String shortCode = new String(base62.encode(buffer.array()));
-
-        return StringUtils.leftPad(shortCode, SHORT_CODE_LENGTH, SHORT_CODE_PADDING_CHAR);
     }
 
     @Override
