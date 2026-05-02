@@ -21,7 +21,7 @@ import by.bratukhin.shortener.web.conversion.DateConverter;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/v1/urls")
+@RequestMapping("/api/v1")
 class UrlsController implements UrlsApi {
 
     @Value("${app.short-link-base}")

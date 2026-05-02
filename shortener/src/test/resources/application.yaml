@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: reactive-url-shortener
+  r2dbc:
+    url: r2dbc:postgresql://test/shortener
+    username: username
+    password: password
+app:
+  short-link-base: http://localhost

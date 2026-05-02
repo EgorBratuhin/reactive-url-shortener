@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
 
 import by.bratukhin.shortener.service.ObjectNotFoundException;
@@ -24,6 +25,15 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ObjectNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     Mono<ErrorResponse> handleEntityNotFound(ObjectNotFoundException ex) {
+        return Mono.just(ErrorResponse.builder(ex,
+                HttpStatus.NOT_FOUND,
+                ex.getMessage())
+            .build());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    Mono<ErrorResponse> handleEntityNotFound(NoResourceFoundException ex) {
         return Mono.just(ErrorResponse.builder(ex,
                 HttpStatus.NOT_FOUND,
                 ex.getMessage())

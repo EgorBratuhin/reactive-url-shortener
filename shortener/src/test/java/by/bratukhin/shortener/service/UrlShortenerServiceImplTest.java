@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -54,12 +54,8 @@ class UrlShortenerServiceImplTest {
     @Mock
     private ReactiveSelectOperation.TerminatingSelect<ShortLink> terminatingSelect;
 
-    private UrlShortenerService urlShortenerService;
-
-    @BeforeEach
-    void setUp() {
-        urlShortenerService = new UrlShortenerServiceImpl(shortLinkRepository, template, shortCodeEncoder);
-    }
+    @InjectMocks
+    private UrlShortenerServiceImpl urlShortenerService;
 
     @Test
     void createNewShortLink() {
