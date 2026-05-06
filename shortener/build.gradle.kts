@@ -4,6 +4,7 @@ plugins {
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.openapi.generator") version "7.21.0"
+    id("io.gatling.gradle") version "3.15.0.1"
 }
 
 java {
@@ -144,4 +145,16 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+gatling {
+    jvmArgs = listOf(
+        "-Xms512m",
+        "-Xmx2g",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED"
+    )
+}
+
+dependencies {
+    gatling("io.gatling.highcharts:gatling-charts-highcharts:3.15.0")
 }

@@ -1,6 +1,8 @@
+server:
+  port: 0
 spring:
   application:
-    name: reactive-url-shortener
+    name: reactive-url-shortener-test
   r2dbc:
     url: r2dbc:postgresql://test/shortener
     username: username
