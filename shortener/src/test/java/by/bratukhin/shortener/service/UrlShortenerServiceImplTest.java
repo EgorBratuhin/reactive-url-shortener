@@ -156,6 +156,39 @@ class UrlShortenerServiceImplTest {
     }
 
     @Test
+    void getOriginalUrlByShortCode() {
+        String shortCode = "shortCode";
+        String expectedUrl = "https://example.com/original";
+
+        when(shortLinkRepository.findOriginalUrlByShortCode(shortCode))
+            .thenReturn(Mono.just(expectedUrl));
+
+        Mono<String> result = urlShortenerService.getOriginalUrlByShortCode(shortCode);
+
+        StepVerifier.create(result)
+            .assertNext(originalUrl -> assertThat(originalUrl).isEqualTo(expectedUrl))
+            .verifyComplete();
+
+        verify(shortLinkRepository).findOriginalUrlByShortCode(shortCode);
+    }
+
+    @Test
+    void getOriginalUrlByShortCodeNotFound() {
+        String nonExistentCode = "nonexistent";
+
+        when(shortLinkRepository.findOriginalUrlByShortCode(nonExistentCode))
+            .thenReturn(Mono.empty());
+
+        Mono<String> result = urlShortenerService.getOriginalUrlByShortCode(nonExistentCode);
+
+        StepVerifier.create(result)
+            .expectError(ObjectNotFoundException.class)
+            .verify();
+
+        verify(shortLinkRepository).findOriginalUrlByShortCode(nonExistentCode);
+    }
+
+    @Test
     void deleteByShortCode() {
         when(shortLinkRepository.deleteByShortCode("shortCode"))
             .thenReturn(Mono.empty());

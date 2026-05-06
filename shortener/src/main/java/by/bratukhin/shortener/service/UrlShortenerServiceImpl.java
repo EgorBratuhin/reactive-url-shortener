@@ -100,7 +100,15 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
         Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
 
         return shortLinkRepository.findByShortCode(shortCode)
-            .switchIfEmpty(Mono.error(new ObjectNotFoundException("Url metadata not found '%s'".formatted(shortCode))));
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Url metadata not found '%s'".formatted(shortCode))));
+    }
+
+    @Override
+    public Mono<String> getOriginalUrlByShortCode(String shortCode) {
+        Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
+
+        return shortLinkRepository.findOriginalUrlByShortCode(shortCode)
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Url metadata not found '%s'".formatted(shortCode))));
     }
 
     @Override

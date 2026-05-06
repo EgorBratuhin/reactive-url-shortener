@@ -25,10 +25,10 @@ class RedirectController implements RedirectApi {
 
     @Override
     public Mono<ResponseEntity<Void>> resolveAndRedirect(String shortCode, ServerWebExchange exchange) {
-        return urlShortenerService.getUrlMetadataByShortCode(shortCode)
-            .map(shortLink -> ResponseEntity
+        return urlShortenerService.getOriginalUrlByShortCode(shortCode)
+            .map(originalUrl -> ResponseEntity
                 .status(HttpStatus.FOUND)
-                .location(URI.create(shortLink.getOriginalUrl()))
+                .location(URI.create(originalUrl))
                 .cacheControl(CacheControl.noCache())
                 .build()
             );

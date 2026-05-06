@@ -38,6 +38,15 @@ public interface UrlShortenerService {
     Mono<ShortLink> getUrlMetadataByShortCode(String shortCode);
 
     ///
+    /// Retrieves the original URL for a shortened link by its short code.
+    /// Optimized for redirect lookups.
+    ///
+    /// @param shortCode the short code to look up (must not be `null`)
+    /// @return a [Mono] emitting the original URL string
+    ///
+    Mono<String> getOriginalUrlByShortCode(String shortCode);
+
+    ///
     /// Deletes a shortened link by its short code.
     ///
     /// @param shortCode the short code to delete (must not be `null`)

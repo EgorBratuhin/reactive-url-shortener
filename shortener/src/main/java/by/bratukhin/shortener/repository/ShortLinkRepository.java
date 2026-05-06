@@ -2,6 +2,7 @@ package by.bratukhin.shortener.repository;
 
 import java.util.UUID;
 
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
 
@@ -31,5 +32,14 @@ public interface ShortLinkRepository extends R2dbcRepository<ShortLink, UUID> {
     /// @return a [Mono#empty()] that signals completion when the deletion is finished
     ///
     Mono<Void> deleteByShortCode(String shortCode);
+
+    ///
+    /// Finds the original URL by its short code without loading the full entity.
+    ///
+    /// @param shortCode the short code identifier (must not be `null`)
+    /// @return a [Mono] emitting the original URL string
+    ///
+    @Query("SELECT original_url FROM short_links WHERE short_code = :shortCode")
+    Mono<String> findOriginalUrlByShortCode(String shortCode);
 
 }

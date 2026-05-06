@@ -9,7 +9,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.service.ObjectNotFoundException;
 import by.bratukhin.shortener.service.UrlShortenerService;
 import reactor.core.publisher.Mono;
@@ -31,10 +30,8 @@ class RedirectControllerTest {
         String shortCode = "0330bhML322HMHIolUI760";
         String originalUrl = "https://example.com/very/long/path";
 
-        when(urlShortenerService.getUrlMetadataByShortCode(shortCode))
-            .thenReturn(Mono.just(new ShortLink()
-                .setShortCode(shortCode)
-                .setOriginalUrl(originalUrl)));
+        when(urlShortenerService.getOriginalUrlByShortCode(shortCode))
+            .thenReturn(Mono.just(originalUrl));
 
         webTestClient.get()
             .uri("/{shortCode}", shortCode)
@@ -44,13 +41,13 @@ class RedirectControllerTest {
             .expectHeader().cacheControl(CacheControl.noCache())
             .expectBody().isEmpty();
 
-        verify(urlShortenerService).getUrlMetadataByShortCode(shortCode);
+        verify(urlShortenerService).getOriginalUrlByShortCode(shortCode);
     }
 
     @Test
     void notFoundWhenShortCodeDoesNotExist() {
         String shortCode = "000000000000000unknown";
-        when(urlShortenerService.getUrlMetadataByShortCode(shortCode))
+        when(urlShortenerService.getOriginalUrlByShortCode(shortCode))
             .thenReturn(Mono.error(new ObjectNotFoundException("Not found")));
 
         webTestClient.get()
@@ -58,13 +55,13 @@ class RedirectControllerTest {
             .exchange()
             .expectStatus().isNotFound();
 
-        verify(urlShortenerService).getUrlMetadataByShortCode(shortCode);
+        verify(urlShortenerService).getOriginalUrlByShortCode(shortCode);
     }
 
     @Test
     void serviceError() {
         String shortCode = "00000000000000000error";
-        when(urlShortenerService.getUrlMetadataByShortCode(shortCode))
+        when(urlShortenerService.getOriginalUrlByShortCode(shortCode))
             .thenReturn(Mono.error(new RuntimeException("Any error")));
 
         webTestClient.get()

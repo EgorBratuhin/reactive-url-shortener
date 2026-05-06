@@ -5,6 +5,9 @@ spring:
     url: r2dbc:postgresql://localhost:5432/shortener
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
+    pool:
+      max-size: 50
+      initial-size: 50
 springdoc:
   api-docs:
     enabled: true
