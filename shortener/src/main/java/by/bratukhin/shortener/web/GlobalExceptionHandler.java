@@ -7,15 +7,15 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ServerWebInputException;
 
 import by.bratukhin.shortener.service.ObjectNotFoundException;
 import reactor.core.publisher.Mono;
 
 ///
-/// Глобальный обработчик исключений.
+/// Global exception handler.
 ///
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -49,9 +49,9 @@ class GlobalExceptionHandler {
             .build());
     }
 
-    @ExceptionHandler(WebExchangeBindException.class)
+    @ExceptionHandler(ServerWebInputException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    Mono<ErrorResponse> handleValidationFailure(WebExchangeBindException ex) {
+    Mono<ErrorResponse> handleValidationFailure(ServerWebInputException ex) {
         return Mono.just(ErrorResponse.builder(ex,
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage())

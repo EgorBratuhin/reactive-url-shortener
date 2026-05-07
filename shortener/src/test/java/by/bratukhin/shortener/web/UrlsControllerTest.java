@@ -60,6 +60,23 @@ class UrlsControllerTest {
     }
 
     @Test
+    void createShortUrlBadRequest() {
+        String request = """
+            {
+                "url": "^",
+                "ttlSeconds": 3600
+            }
+            """;
+
+        webTestClient.post()
+            .uri("/api/v1/urls")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(request)
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
     void deleteShortUrl() {
         when(urlShortenerService.deleteByShortCode("0123456789012345678901"))
             .thenReturn(Mono.empty());
