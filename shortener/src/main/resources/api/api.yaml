@@ -59,6 +59,8 @@ paths:
                     expiresAt: "2026-12-31T23:59:59Z"
         '400':
           $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -149,7 +151,6 @@ paths:
               example:
                 code: "URL_EXPIRED"
                 message: "This short URL has expired"
-                timestamp: "2026-01-15T10:30:00Z"
 
 components:
   parameters:
@@ -250,7 +251,6 @@ components:
       required:
         - code
         - message
-        - timestamp
       properties:
         code:
           type: string
@@ -260,16 +260,44 @@ components:
           type: string
           description: Human-readable error message
           example: "The provided URL is invalid"
-        timestamp:
-          type: string
-          format: date-time
         details:
           type: object
           additionalProperties: true
           description: Additional error context
-        traceId:
+
+    ValidationErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - errors
+      properties:
+        code:
           type: string
-          description: Request trace ID for debugging
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Validation failed. Check 'errors' for details."
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          example: "url"
+        message:
+          type: string
+          example: "must be a valid URL"
+        code:
+          type: string
+          example: "INVALID_FORMAT"
 
   responses:
     BadRequest:
@@ -283,8 +311,6 @@ components:
               value:
                 code: "INVALID_URL"
                 message: "The provided URL is not valid"
-                timestamp: "2026-01-15T10:30:00Z"
-                traceId: "abc123def456"
 
     NotFound:
       description: Short URL not found
@@ -295,7 +321,6 @@ components:
           example:
             code: "URL_NOT_FOUND"
             message: "Short URL with code '1A2b3C4d5E6f' not found"
-            timestamp: "2026-01-15T10:30:00Z"
 
     InternalError:
       description: Internal server error
@@ -306,5 +331,10 @@ components:
           example:
             code: "INTERNAL_ERROR"
             message: "An unexpected error occurred"
-            timestamp: "2026-01-15T10:30:00Z"
-            traceId: "abc123def456"
+
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
