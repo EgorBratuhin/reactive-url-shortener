@@ -20,7 +20,7 @@ public interface ShortLinkRepository extends R2dbcRepository<ShortLink, UUID> {
     ///
     /// Finds a [ShortLink] by its unique short code.
     ///
-    /// @param shortCode the short code identifier (must not be `null`)
+    /// @param shortCode the short code identifier; must not be null
     /// @return a [Mono] emitting the found [ShortLink]
     ///
     Mono<ShortLink> findByShortCode(String shortCode);
@@ -28,7 +28,7 @@ public interface ShortLinkRepository extends R2dbcRepository<ShortLink, UUID> {
     ///
     /// Deletes a [ShortLink] by its short code.
     ///
-    /// @param shortCode the short code identifier of the link to delete (must not be `null`)
+    /// @param shortCode the short code identifier of the link to delete; must not be null
     /// @return a [Mono#empty()] that signals completion when the deletion is finished
     ///
     Mono<Void> deleteByShortCode(String shortCode);
@@ -36,7 +36,7 @@ public interface ShortLinkRepository extends R2dbcRepository<ShortLink, UUID> {
     ///
     /// Finds the original URL by its short code without loading the full entity.
     ///
-    /// @param shortCode the short code identifier (must not be `null`)
+    /// @param shortCode the short code identifier; must not be null
     /// @return a [Mono] emitting the original URL string
     ///
     @Query("SELECT original_url FROM short_links WHERE short_code = :shortCode")

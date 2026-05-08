@@ -14,8 +14,8 @@ public interface UrlShortenerService {
     ///
     /// Creates a new shortened link.
     ///
-    /// @param uri        the original URI to shorten (must not be `null`)
-    /// @param ttlSeconds the time-to-live duration in seconds (must not be `null`)
+    /// @param uri        the original URI to shorten; must not be null
+    /// @param ttlSeconds the time-to-live duration in seconds; must not be null
     /// @return a [Mono] emitting the created [ShortLink]
     ///
     Mono<ShortLink> create(URI uri, long ttlSeconds);
@@ -32,7 +32,7 @@ public interface UrlShortenerService {
     ///
     /// Retrieves metadata for a shortened link by its short code.
     ///
-    /// @param shortCode the short code to look up (must not be `null`)
+    /// @param shortCode the short code to look up; must not be null
     /// @return a [Mono] emitting the [ShortLink] metadata
     ///
     Mono<ShortLink> getUrlMetadataByShortCode(String shortCode);
@@ -41,7 +41,7 @@ public interface UrlShortenerService {
     /// Retrieves the original URL for a shortened link by its short code.
     /// Optimized for redirect lookups.
     ///
-    /// @param shortCode the short code to look up (must not be `null`)
+    /// @param shortCode the short code to look up; must not be null
     /// @return a [Mono] emitting the original URL string
     ///
     Mono<String> getOriginalUrlByShortCode(String shortCode);
@@ -49,7 +49,7 @@ public interface UrlShortenerService {
     ///
     /// Deletes a shortened link by its short code.
     ///
-    /// @param shortCode the short code to delete (must not be `null`)
+    /// @param shortCode the short code to delete; must not be null
     /// @return a [Mono#empty()] completing the deletion operation
     ///
     Mono<Void> deleteByShortCode(String shortCode);

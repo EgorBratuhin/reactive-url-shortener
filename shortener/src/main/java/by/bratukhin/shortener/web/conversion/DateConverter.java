@@ -5,12 +5,15 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 ///
-/// Конвертер дат.
+/// Utility class for date and time conversions.
 ///
 public final class DateConverter {
 
     ///
-    /// Конвертировать [Instant] в [OffsetDateTime].
+    /// Converts the given [Instant] to [OffsetDateTime] using the system default time zone.
+    ///
+    /// @param input the [Instant] to convert; may be null
+    /// @return the corresponding [OffsetDateTime], or null if the input is null
     ///
     public static OffsetDateTime convert(Instant input) {
         if (input == null) {

@@ -22,7 +22,7 @@ import by.bratukhin.shortener.support.ItemsPage;
 import reactor.core.publisher.Mono;
 
 ///
-/// Implementation of [UrlShortenerService].
+/// Implementation of [UrlShortenerService] that provides URL shortening functionality.
 ///
 @Service
 class UrlShortenerServiceImpl implements UrlShortenerService {

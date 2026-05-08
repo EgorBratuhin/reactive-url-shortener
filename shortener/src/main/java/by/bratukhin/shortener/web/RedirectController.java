@@ -13,6 +13,14 @@ import by.bratukhin.api.RedirectApi;
 import by.bratukhin.shortener.service.UrlShortenerService;
 import reactor.core.publisher.Mono;
 
+///
+/// REST controller that handles redirecting from short URLs to original URLs.
+///
+/// This controller is the entry point for resolving short URL codes and redirecting
+/// clients to the original destination URL. It implements the [RedirectApi]
+/// interface and returns HTTP 302 (Found) responses with the location header set
+/// to the original URL.
+///
 @RestController
 @RequestMapping("/")
 class RedirectController implements RedirectApi {

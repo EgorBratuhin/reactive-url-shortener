@@ -8,7 +8,7 @@ public class ObjectNotFoundException extends RuntimeException {
     ///
     /// Constructor.
     ///
-    /// @param message the detail message (must not be `null`)
+    /// @param message the detail message; must not be null
     ///
     public ObjectNotFoundException(String message) {
         super(message);

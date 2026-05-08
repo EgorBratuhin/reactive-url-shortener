@@ -20,6 +20,9 @@ import by.bratukhin.shortener.support.ItemsPage;
 import by.bratukhin.shortener.web.conversion.DateConverter;
 import reactor.core.publisher.Mono;
 
+///
+/// REST controller handling URL shortener management operations.
+///
 @RestController
 @RequestMapping("/api/v1")
 class UrlsController implements UrlsApi {
