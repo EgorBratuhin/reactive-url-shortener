@@ -1,9 +1,9 @@
 plugins {
     java
     jacoco
-    id("org.springframework.boot") version "4.0.5"
+    id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
-    id("org.openapi.generator") version "7.21.0"
+    id("org.openapi.generator") version "7.22.0"
     id("io.gatling.gradle") version "3.15.0.1"
 }
 
@@ -16,7 +16,7 @@ java {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springdoc:springdoc-openapi-bom:3.0.2")
+        mavenBom("org.springdoc:springdoc-openapi-bom:3.0.3")
     }
 }
 
@@ -28,7 +28,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui")
 
     implementation(libs.fasterxml.uuid.generator)
-    implementation("io.seruco.encoding:base62:0.1.3")
+    implementation(libs.seruco.encoding.base62)
     implementation(libs.bundles.srplib)
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")

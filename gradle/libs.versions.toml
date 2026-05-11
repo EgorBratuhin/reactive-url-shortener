@@ -1,9 +1,11 @@
 [versions]
 fasterxml-uuid-generator = "5.2.0"
+seruco-encoding-base62 = "0.1.3"
 srp-contract = "0.9.0"
 
 [libraries]
 fasterxml-uuid-generator = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "fasterxml-uuid-generator" }
+seruco-encoding-base62 = { module = "io.seruco.encoding:base62", version.ref = "seruco-encoding-base62" }
 srp-contract = { module = "org.srplib:srp-contract", version.ref = "srp-contract" }
 
 [bundles]
