@@ -3,12 +3,14 @@ package by.bratukhin.shortener.web;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.CacheControl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import by.bratukhin.shortener.configuration.SecurityConfig;
 import by.bratukhin.shortener.service.ObjectNotFoundException;
 import by.bratukhin.shortener.service.UrlShortenerService;
 import reactor.core.publisher.Mono;
@@ -17,6 +19,7 @@ import reactor.core.publisher.Mono;
 /// Test for [RedirectController].
 ///
 @WebFluxTest(RedirectController.class)
+@Import(SecurityConfig.class)
 class RedirectControllerTest {
 
     @Autowired

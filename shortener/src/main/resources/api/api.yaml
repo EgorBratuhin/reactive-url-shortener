@@ -26,6 +26,8 @@ paths:
       description: |
         Creates a shortened URL from a long URL.
       operationId: createShortUrl
+      security:
+        - bearerAuth: [ ]
       requestBody:
         required: true
         content:
@@ -70,6 +72,8 @@ paths:
       summary: List all shortened URLs (paginated)
       description: Returns a paginated list of all created short URLs
       operationId: listShortUrls
+      security:
+        - bearerAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/NextCursor'
         - $ref: '#/components/parameters/PageSize'
@@ -88,6 +92,8 @@ paths:
       summary: Get URL metadata
       description: Retrieve metadata for a short URL without redirecting
       operationId: getUrlMetadata
+      security:
+        - bearerAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/ShortCode'
       responses:
@@ -106,6 +112,8 @@ paths:
       summary: Delete a short URL
       description: Permanently delete a short URL
       operationId: deleteShortUrl
+      security:
+        - bearerAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/ShortCode'
       responses:
@@ -153,6 +161,12 @@ paths:
                 message: "This short URL has expired"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   parameters:
     ShortCode:
       name: shortCode

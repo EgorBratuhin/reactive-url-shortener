@@ -7,5 +7,10 @@ spring:
     url: r2dbc:postgresql://test/shortener
     username: username
     password: password
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost
 app:
   short-link-base: http://localhost

@@ -1,3 +1,6 @@
+server:
+  http2:
+    enabled: true
 spring:
   application:
     name: reactive-url-shortener
@@ -8,10 +11,21 @@ spring:
     pool:
       max-size: 50
       initial-size: 50
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/shortener
 springdoc:
   api-docs:
     enabled: true
   swagger-ui:
+    persist-authorization: true
     display-request-duration: true
+    oauth:
+      client-id: shortener-client
+      realm: shortener
+      app-name: "Url Shortener API"
+      use-pkce-with-authorization-code-grant: true
 app:
   short-link-base: http://localhost:8080

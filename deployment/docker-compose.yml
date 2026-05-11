@@ -28,5 +28,37 @@ services:
       - ../database/migration:/flyway/sql
     command: -url=jdbc:postgresql://postgres:5432/shortener -user=postgres -password=postgres migrate
 
+  keycloak:
+    image: keycloak/keycloak:26.6
+    container_name: keycloak-dev
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+      KC_HTTP_PORT: 8180
+      KC_HOSTNAME_STRICT: "false"
+
+      KC_DB: dev-file
+
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "false"
+
+    ports:
+      - "8180:8180"
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8180/health/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - shortener_keycloak_data:/opt/keycloak/data
+
+
 volumes:
   shortener_postgres_data:
+  shortener_keycloak_data:

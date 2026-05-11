@@ -9,7 +9,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -17,6 +19,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
+import by.bratukhin.shortener.configuration.SecurityConfig;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.service.ObjectNotFoundException;
 import by.bratukhin.shortener.service.UrlShortenerService;
@@ -24,6 +27,8 @@ import by.bratukhin.shortener.support.ItemsPage;
 import reactor.core.publisher.Mono;
 
 @WebFluxTest(UrlsController.class)
+@Import(SecurityConfig.class)
+@WithMockUser
 class UrlsControllerTest {
 
     private static final String TEST_URI = "https://example.com";
