@@ -1,5 +1,6 @@
 package by.bratukhin.shortener.repository;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.data.r2dbc.repository.Query;
@@ -37,9 +38,10 @@ public interface ShortLinkRepository extends R2dbcRepository<ShortLink, UUID> {
     /// Finds the original URL by its short code without loading the full entity.
     ///
     /// @param shortCode the short code identifier; must not be null
+    /// @param now       current timestamp; must not be null
     /// @return a [Mono] emitting the original URL string
     ///
-    @Query("SELECT original_url FROM short_links WHERE short_code = :shortCode")
-    Mono<String> findOriginalUrlByShortCode(String shortCode);
+    @Query("SELECT original_url FROM short_links WHERE short_code = :shortCode AND expires_at > :now")
+    Mono<String> findOriginalUrlByShortCode(String shortCode, Instant now);
 
 }

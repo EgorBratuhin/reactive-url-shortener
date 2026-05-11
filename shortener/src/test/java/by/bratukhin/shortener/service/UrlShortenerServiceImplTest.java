@@ -19,6 +19,7 @@ import org.springframework.data.r2dbc.core.ReactiveSelectOperation;
 import org.springframework.data.relational.core.query.Query;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -160,7 +161,7 @@ class UrlShortenerServiceImplTest {
         String shortCode = "shortCode";
         String expectedUrl = "https://example.com/original";
 
-        when(shortLinkRepository.findOriginalUrlByShortCode(shortCode))
+        when(shortLinkRepository.findOriginalUrlByShortCode(eq(shortCode), any(Instant.class)))
             .thenReturn(Mono.just(expectedUrl));
 
         Mono<String> result = urlShortenerService.getOriginalUrlByShortCode(shortCode);
@@ -169,14 +170,14 @@ class UrlShortenerServiceImplTest {
             .assertNext(originalUrl -> assertThat(originalUrl).isEqualTo(expectedUrl))
             .verifyComplete();
 
-        verify(shortLinkRepository).findOriginalUrlByShortCode(shortCode);
+        verify(shortLinkRepository).findOriginalUrlByShortCode(eq(shortCode), any(Instant.class));
     }
 
     @Test
     void getOriginalUrlByShortCodeNotFound() {
         String nonExistentCode = "nonexistent";
 
-        when(shortLinkRepository.findOriginalUrlByShortCode(nonExistentCode))
+        when(shortLinkRepository.findOriginalUrlByShortCode(eq(nonExistentCode), any(Instant.class)))
             .thenReturn(Mono.empty());
 
         Mono<String> result = urlShortenerService.getOriginalUrlByShortCode(nonExistentCode);
@@ -185,7 +186,7 @@ class UrlShortenerServiceImplTest {
             .expectError(ObjectNotFoundException.class)
             .verify();
 
-        verify(shortLinkRepository).findOriginalUrlByShortCode(nonExistentCode);
+        verify(shortLinkRepository).findOriginalUrlByShortCode(eq(nonExistentCode), any(Instant.class));
     }
 
     @Test
