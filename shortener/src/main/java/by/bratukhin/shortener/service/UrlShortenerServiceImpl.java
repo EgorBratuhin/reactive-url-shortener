@@ -11,6 +11,7 @@ import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.srplib.contract.Argument;
 
@@ -19,6 +20,7 @@ import com.fasterxml.uuid.Generators;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.repository.ShortLinkRepository;
 import by.bratukhin.shortener.support.ItemsPage;
+import io.micrometer.observation.annotation.Observed;
 import reactor.core.publisher.Mono;
 
 ///
@@ -43,6 +45,7 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     @Transactional
+    @Observed(name = "links.created", contextualName = "creating-short-link")
     public Mono<ShortLink> create(URI uri, long ttlSeconds) {
         Argument.checkNotNullWithGenericMessage(uri, "uri");
 
@@ -104,6 +107,7 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.NEVER)
     public Mono<String> getOriginalUrlByShortCode(String shortCode) {
         Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
 

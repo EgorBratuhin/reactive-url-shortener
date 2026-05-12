@@ -11,6 +11,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import by.bratukhin.api.RedirectApi;
 import by.bratukhin.shortener.service.UrlShortenerService;
+import io.micrometer.observation.annotation.Observed;
 import reactor.core.publisher.Mono;
 
 ///
@@ -32,6 +33,7 @@ class RedirectController implements RedirectApi {
     }
 
     @Override
+    @Observed(name = "links.resolved", contextualName = "resolving-short-link")
     public Mono<ResponseEntity<Void>> resolveAndRedirect(String shortCode, ServerWebExchange exchange) {
         return urlShortenerService.getOriginalUrlByShortCode(shortCode)
             .map(originalUrl -> ResponseEntity

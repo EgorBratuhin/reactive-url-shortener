@@ -8,13 +8,6 @@ spring:
     url: r2dbc:postgresql://localhost:5432/shortener
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
-    pool:
-      initial-size: 20
-      max-size: 50
-      max-idle-time: 1m
-      validation-query: "SELECT 1"
-      validation-depth: REMOTE
-      acquire-retry: 3
   security:
     oauth2:
       resourceserver:
@@ -33,3 +26,13 @@ springdoc:
       use-pkce-with-authorization-code-grant: true
 app:
   short-link-base: http://localhost:8080
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
