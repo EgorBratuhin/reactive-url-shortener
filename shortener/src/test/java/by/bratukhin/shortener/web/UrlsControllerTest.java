@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
 
 @WebFluxTest(UrlsController.class)
 @Import(SecurityConfig.class)
-@WithMockUser
+@WithMockUser(authorities = "SCOPE_url:manage")
 class UrlsControllerTest {
 
     private static final String TEST_URI = "https://example.com";

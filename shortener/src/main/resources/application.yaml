@@ -9,8 +9,12 @@ spring:
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     pool:
+      initial-size: 20
       max-size: 50
-      initial-size: 50
+      max-idle-time: 1m
+      validation-query: "SELECT 1"
+      validation-depth: REMOTE
+      acquire-retry: 3
   security:
     oauth2:
       resourceserver:

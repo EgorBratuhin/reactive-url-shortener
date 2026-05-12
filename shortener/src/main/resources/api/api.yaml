@@ -16,6 +16,8 @@ tags:
     description: Create and manage short URLs
   - name: Redirect
     description: Resolve short URLs and redirect
+  - name: Admin
+    description: Administrative operations
 
 paths:
   /urls:
@@ -160,6 +162,28 @@ paths:
                 code: "URL_EXPIRED"
                 message: "This short URL has expired"
 
+  /admin/cleanup:
+    post:
+      tags:
+        - Admin
+      summary: Delete expired short URLs
+      description: |
+        Permanently deletes all short links whose expiration time has passed.
+      operationId: cleanupExpiredLinks
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Cleanup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CleanupResponse'
+        '403':
+          description: Forbidden — insufficient privileges
+        '500':
+          $ref: '#/components/responses/InternalError'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -259,6 +283,17 @@ components:
         nextCursor:
           type: string
           description: Next cursor
+
+    CleanupResponse:
+      type: object
+      required:
+        - deletedRows
+      properties:
+        deletedRows:
+          type: integer
+          format: int64
+          description: Number of deleted expired links
+          example: 42
 
     ErrorResponse:
       type: object

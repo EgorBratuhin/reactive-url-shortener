@@ -13,6 +13,24 @@
       }
     ]
   },
+  "clientScopes": [
+    {
+      "name": "url:manage",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "url:clean",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    }
+  ],
   "clients": [
     {
       "clientId": "shortener-client",
@@ -26,12 +44,27 @@
       "webOrigins": [
         "http://localhost:8080"
       ],
-      "directAccessGrantsEnabled": true
+      "directAccessGrantsEnabled": true,
+      "defaultClientScopes": [
+        "url:manage"
+      ]
+    },
+    {
+      "clientId": "shortener-cron",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "cron-secret",
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "defaultClientScopes": [
+        "url:clean"
+      ]
     }
   ],
   "users": [
     {
-      "username": "testuser",
+      "username": "user",
       "enabled": true,
       "email": "testuser@example.com",
       "firstName": "Test",
@@ -39,12 +72,20 @@
       "credentials": [
         {
           "type": "password",
-          "value": "test",
+          "value": "user",
           "temporary": false
         }
       ],
       "realmRoles": [
         "user"
+      ]
+    },
+    {
+      "username": "service-account-shortener-cron",
+      "enabled": true,
+      "serviceAccountClientId": "shortener-cron",
+      "realmRoles": [
+        "admin"
       ]
     }
   ]

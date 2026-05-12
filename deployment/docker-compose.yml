@@ -37,6 +37,7 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
 
       KC_HTTP_PORT: 8180
+      KC_HOSTNAME: localhost
       KC_HOSTNAME_STRICT: "false"
 
       KC_DB: dev-file
@@ -46,9 +47,10 @@ services:
 
     ports:
       - "8180:8180"
+      - "9000:9000"
 
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8180/health/ready" ]
+      test: [ "CMD-SHELL", "curl --head -fsS http://localhost:9000/health/ready | echo $?" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,6 +60,24 @@ services:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
       - shortener_keycloak_data:/opt/keycloak/data
 
+  cleanup-cron:
+    image: alpine:3.23
+    container_name: cleanup-cron
+    extra_hosts:
+      - "shortener:host-gateway"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ./cleanup-cron-setup.sh:/cleanup-cron-setup.sh
+      - ./cleanup-cron-task.sh:/cleanup-cron-task.sh
+    command: sh /cleanup-cron-setup.sh
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_URL: http://keycloak:8180
+      SHORTENER_URL: http://shortener:8080
+      CRON_CLIENT_ID: shortener-cron
+      CRON_CLIENT_SECRET: cron-secret
 
 volumes:
   shortener_postgres_data:
