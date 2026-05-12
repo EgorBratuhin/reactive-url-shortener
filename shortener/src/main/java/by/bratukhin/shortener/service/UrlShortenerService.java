@@ -15,10 +15,10 @@ public interface UrlShortenerService {
     /// Creates a new shortened link.
     ///
     /// @param uri        the original URI to shorten; must not be null
-    /// @param ttlSeconds the time-to-live duration in seconds; must not be null
+    /// @param ttlSeconds the time-to-live duration in seconds
     /// @return a [Mono] emitting the created [ShortLink]
     ///
-    Mono<ShortLink> create(URI uri, long ttlSeconds);
+    Mono<ShortLink> create(URI uri, Integer ttlSeconds);
 
     ///
     /// Retrieves a paginated list of shortened links.

@@ -37,7 +37,7 @@ import reactor.test.StepVerifier;
 class UrlShortenerServiceImplTest {
 
     private static final String TEST_URI = "https://example.com";
-    private static final long TTL_SECONDS = 3600L;
+    private static final Integer TTL_SECONDS = 3600;
     private static final int PAGE_SIZE = 10;
 
     @Mock
@@ -74,6 +74,28 @@ class UrlShortenerServiceImplTest {
                 assertThat(shortLink.getExpiresAt())
                     .isAfter(Instant.now().plusSeconds(TTL_SECONDS - 1))
                     .isBefore(Instant.now().plusSeconds(TTL_SECONDS + 1));
+                assertThat(shortLink.getId()).isNotNull();
+            })
+            .verifyComplete();
+
+        verify(shortCodeEncoder).encode(any(UUID.class));
+        verify(shortLinkRepository).save(any(ShortLink.class));
+    }
+
+    @Test
+    void createNeverExpiredShortLink() {
+        when(shortCodeEncoder.encode(any(UUID.class))).thenReturn("shortCode");
+        when(shortLinkRepository.save(any(ShortLink.class)))
+            .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), null);
+
+        StepVerifier.create(result)
+            .assertNext(shortLink -> {
+                assertThat(shortLink.getOriginalUrl()).isEqualTo(TEST_URI);
+                assertThat(shortLink.getShortCode()).isEqualTo("shortCode");
+                assertThat(shortLink.isNew()).isTrue();
+                assertThat(shortLink.getExpiresAt()).isNull();
                 assertThat(shortLink.getId()).isNotNull();
             })
             .verifyComplete();
@@ -191,7 +213,12 @@ class UrlShortenerServiceImplTest {
 
     @Test
     void deleteByShortCode() {
-        when(shortLinkRepository.deleteByShortCode("shortCode"))
+        ShortLink expectedShortLink = newShortLink("shortCode", TEST_URI);
+
+        when(shortLinkRepository.findByShortCode("shortCode"))
+            .thenReturn(Mono.just(expectedShortLink));
+
+        when(shortLinkRepository.delete(expectedShortLink))
             .thenReturn(Mono.empty());
 
         Mono<Void> result = urlShortenerService.deleteByShortCode("shortCode");
@@ -199,7 +226,7 @@ class UrlShortenerServiceImplTest {
         StepVerifier.create(result)
             .verifyComplete();
 
-        verify(shortLinkRepository).deleteByShortCode("shortCode");
+        verify(shortLinkRepository).delete(expectedShortLink);
     }
 
 

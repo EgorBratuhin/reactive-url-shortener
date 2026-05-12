@@ -46,22 +46,26 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     @Override
     @Transactional
     @Observed(name = "links.created", contextualName = "creating-short-link")
-    public Mono<ShortLink> create(URI uri, long ttlSeconds) {
+    public Mono<ShortLink> create(URI uri, Integer ttlSeconds) {
         Argument.checkNotNullWithGenericMessage(uri, "uri");
 
         return Mono.fromCallable(() -> newShortLink(uri, ttlSeconds))
             .flatMap(shortLinkRepository::save);
     }
 
-    private ShortLink newShortLink(URI uri, long ttlSeconds) {
+    private ShortLink newShortLink(URI uri, Integer ttlSeconds) {
         UUID id = Generators.timeBasedEpochGenerator().generate();
+
+        Instant expiresAt = ttlSeconds != null ?
+            Instant.now().plusSeconds(ttlSeconds) :
+            null;
 
         ShortLink shortLink = new ShortLink();
         shortLink.setId(id);
         shortLink.setNew(true);
         shortLink.setShortCode(shortCodeEncoder.encode(id));
         shortLink.setOriginalUrl(uri.toString());
-        shortLink.setExpiresAt(Instant.now().plusSeconds(ttlSeconds));
+        shortLink.setExpiresAt(expiresAt);
 
         return shortLink;
     }
@@ -120,7 +124,8 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     public Mono<Void> deleteByShortCode(String shortCode) {
         Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
 
-        return shortLinkRepository.deleteByShortCode(shortCode);
+        return getUrlMetadataByShortCode(shortCode)
+            .flatMap(shortLinkRepository::delete);
     }
 
 }

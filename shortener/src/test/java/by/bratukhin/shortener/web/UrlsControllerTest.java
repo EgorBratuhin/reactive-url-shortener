@@ -49,7 +49,7 @@ class UrlsControllerTest {
             """.formatted(TEST_URI);
 
         ShortLink shortLink = newShortLink("0123456789012345678901", TEST_URI);
-        when(urlShortenerService.create(eq(URI.create(TEST_URI)), eq(3600L)))
+        when(urlShortenerService.create(eq(URI.create(TEST_URI)), eq(3600)))
             .thenReturn(Mono.just(shortLink));
 
         webTestClient.post()

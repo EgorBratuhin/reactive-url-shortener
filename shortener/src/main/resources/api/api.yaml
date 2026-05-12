@@ -238,7 +238,6 @@ components:
           description: Time-to-live in seconds (default 90 days)
           minimum: 60
           maximum: 7776000
-          default: 7776000
           example: 86400
 
     UrlMetadata:
