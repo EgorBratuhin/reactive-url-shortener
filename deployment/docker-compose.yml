@@ -28,6 +28,12 @@ services:
       - ../database/migration:/flyway/sql
     command: -url=jdbc:postgresql://postgres:5432/shortener -user=postgres -password=postgres migrate
 
+  redis:
+    image: redis:8.6-alpine
+    container_name: shortener-redis_cache
+    ports:
+      - "6379:6379"
+
   keycloak:
     image: keycloak/keycloak:26.6
     container_name: keycloak-dev

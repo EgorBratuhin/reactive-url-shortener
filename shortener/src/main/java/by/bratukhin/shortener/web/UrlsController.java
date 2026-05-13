@@ -2,7 +2,6 @@ package by.bratukhin.shortener.web;
 
 import java.net.URI;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +13,7 @@ import by.bratukhin.api.UrlsApi;
 import by.bratukhin.api.model.CreateUrlRequestDto;
 import by.bratukhin.api.model.UrlListResponseDto;
 import by.bratukhin.api.model.UrlMetadataDto;
+import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.service.UrlShortenerService;
 import by.bratukhin.shortener.support.ItemsPage;
@@ -27,12 +27,12 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/v1")
 class UrlsController implements UrlsApi {
 
-    @Value("${app.short-link-base}")
-    private String baseDomain;
+    private final ShortLinkConfigurationProperties shortLinkConfigurationProperties;
 
     private final UrlShortenerService urlShortenerService;
 
-    UrlsController(UrlShortenerService urlShortenerService) {
+    UrlsController(ShortLinkConfigurationProperties shortLinkConfigurationProperties, UrlShortenerService urlShortenerService) {
+        this.shortLinkConfigurationProperties = shortLinkConfigurationProperties;
         this.urlShortenerService = urlShortenerService;
     }
 
@@ -76,7 +76,7 @@ class UrlsController implements UrlsApi {
     }
 
     private URI buildShortUri(ShortLink shortLink) {
-        return UriComponentsBuilder.fromUriString(baseDomain)
+        return UriComponentsBuilder.fromUriString(shortLinkConfigurationProperties.getBaseDomain())
             .path(shortLink.getShortCode())
             .build()
             .toUri();

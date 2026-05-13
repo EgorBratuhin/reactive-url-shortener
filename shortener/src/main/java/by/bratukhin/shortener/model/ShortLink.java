@@ -55,4 +55,12 @@ public class ShortLink extends AbstractDataObject {
         this.expiresAt = expiresAt;
         return this;
     }
+
+    ///
+    /// Checks whether the link is active.
+    ///
+    public boolean isActive() {
+        return getExpiresAt() == null ||
+               Instant.now().isBefore(getExpiresAt());
+    }
 }

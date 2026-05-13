@@ -1,6 +1,7 @@
 package by.bratukhin.shortener.service;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.srplib.contract.Argument;
 
 import com.fasterxml.uuid.Generators;
 
+import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.repository.ShortLinkRepository;
 import by.bratukhin.shortener.support.ItemsPage;
@@ -29,17 +32,24 @@ import reactor.core.publisher.Mono;
 @Service
 class UrlShortenerServiceImpl implements UrlShortenerService {
 
+    private final ShortLinkConfigurationProperties shortLinkConfigurationProperties;
+
     private final ShortLinkRepository shortLinkRepository;
 
-    private final R2dbcEntityTemplate template;
+    private final R2dbcEntityTemplate r2dbcEntityTemplate;
+
+    private final ReactiveRedisTemplate<String, String> redisTemplate;
 
     private final ShortCodeEncoder shortCodeEncoder;
 
-    UrlShortenerServiceImpl(ShortLinkRepository shortLinkRepository, R2dbcEntityTemplate template,
-        ShortCodeEncoder shortCodeEncoder) {
+    UrlShortenerServiceImpl(ShortLinkConfigurationProperties shortLinkConfigurationProperties,
+        ShortLinkRepository shortLinkRepository, R2dbcEntityTemplate r2dbcEntityTemplate,
+        ReactiveRedisTemplate<String, String> redisTemplate, ShortCodeEncoder shortCodeEncoder) {
 
+        this.shortLinkConfigurationProperties = shortLinkConfigurationProperties;
         this.shortLinkRepository = shortLinkRepository;
-        this.template = template;
+        this.r2dbcEntityTemplate = r2dbcEntityTemplate;
+        this.redisTemplate = redisTemplate;
         this.shortCodeEncoder = shortCodeEncoder;
     }
 
@@ -50,7 +60,8 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
         Argument.checkNotNullWithGenericMessage(uri, "uri");
 
         return Mono.fromCallable(() -> newShortLink(uri, ttlSeconds))
-            .flatMap(shortLinkRepository::save);
+            .flatMap(shortLinkRepository::save)
+            .flatMap(this::cache);
     }
 
     private ShortLink newShortLink(URI uri, Integer ttlSeconds) {
@@ -84,7 +95,7 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
             .limit(limitWithNextPageIndicator)
             .sort(Sort.by(ShortLink.Fields.shortCode).descending());
 
-        return template.select(ShortLink.class)
+        return r2dbcEntityTemplate.select(ShortLink.class)
             .matching(query)
             .all()
             .collectList()
@@ -115,8 +126,26 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     public Mono<String> getOriginalUrlByShortCode(String shortCode) {
         Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
 
-        return shortLinkRepository.findOriginalUrlByShortCode(shortCode, Instant.now())
-            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Url metadata not found '%s'".formatted(shortCode))));
+        return redisTemplate.opsForValue().get(shortCode)
+            .switchIfEmpty(Mono.defer(() -> shortLinkRepository.findByShortCode(shortCode))
+                .filter(ShortLink::isActive)
+                .flatMap(this::cache)
+                .map(ShortLink::getOriginalUrl))
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Original url not found '%s'".formatted(shortCode))));
+    }
+
+    private Mono<ShortLink> cache(ShortLink shortLink) {
+        Duration timeout = shortLink.getExpiresAt() == null ?
+            shortLinkConfigurationProperties.getCacheDefaultTimeout() :
+            Duration.between(Instant.now(), shortLink.getExpiresAt());
+
+        if (!timeout.isPositive()) {
+            return Mono.just(shortLink);
+        }
+
+        return redisTemplate.opsForValue()
+            .set(shortLink.getShortCode(), shortLink.getOriginalUrl(), timeout)
+            .thenReturn(shortLink);
     }
 
     @Override
@@ -125,7 +154,9 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
         Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
 
         return getUrlMetadataByShortCode(shortCode)
-            .flatMap(shortLinkRepository::delete);
+            .flatMap(shortLinkRepository::delete)
+            .then(Mono.defer(() -> redisTemplate.delete(shortCode)))
+            .then();
     }
 
 }

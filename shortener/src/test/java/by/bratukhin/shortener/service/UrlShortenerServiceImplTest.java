@@ -1,6 +1,7 @@
 package by.bratukhin.shortener.service;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +17,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.core.ReactiveSelectOperation;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveValueOperations;
 import org.springframework.data.relational.core.query.Query;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,6 +26,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.repository.ShortLinkRepository;
 import by.bratukhin.shortener.support.ItemsPage;
@@ -41,10 +45,19 @@ class UrlShortenerServiceImplTest {
     private static final int PAGE_SIZE = 10;
 
     @Mock
+    private ShortLinkConfigurationProperties shortLinkConfigurationProperties;
+
+    @Mock
     private ShortLinkRepository shortLinkRepository;
 
     @Mock
-    private R2dbcEntityTemplate template;
+    private R2dbcEntityTemplate r2dbcEntityTemplate;
+
+    @Mock
+    private ReactiveValueOperations<String, String> valueOperations;
+
+    @Mock
+    private ReactiveRedisTemplate<String, String> redisTemplate;
 
     @Mock
     private ShortCodeEncoder shortCodeEncoder;
@@ -60,6 +73,10 @@ class UrlShortenerServiceImplTest {
 
     @Test
     void createNewShortLink() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.set(any(), any(), any(Duration.class)))
+            .thenReturn(Mono.just(true));
+
         when(shortCodeEncoder.encode(any(UUID.class))).thenReturn("shortCode");
         when(shortLinkRepository.save(any(ShortLink.class)))
             .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
@@ -84,6 +101,13 @@ class UrlShortenerServiceImplTest {
 
     @Test
     void createNeverExpiredShortLink() {
+        when(shortLinkConfigurationProperties.getCacheDefaultTimeout())
+            .thenReturn(Duration.ofMinutes(1));
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.set(eq("shortCode"), eq(TEST_URI), any(Duration.class)))
+            .thenReturn(Mono.just(true));
+
         when(shortCodeEncoder.encode(any(UUID.class))).thenReturn("shortCode");
         when(shortLinkRepository.save(any(ShortLink.class)))
             .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
@@ -110,7 +134,7 @@ class UrlShortenerServiceImplTest {
     void getShortLinksPageWithNextCursor(String lastShortCode) {
         List<ShortLink> shortLinks = newShortLinks(PAGE_SIZE + 1);
 
-        setupTemplateMock(shortLinks);
+        setupR2dbcEntityTemplateMock(shortLinks);
 
         Mono<ItemsPage<ShortLink>> result = urlShortenerService.getShortLinks(lastShortCode, PAGE_SIZE);
 
@@ -130,7 +154,7 @@ class UrlShortenerServiceImplTest {
     void getShortLinksPageWithoutNextCursor(String lastShortCode) {
         List<ShortLink> shortLinks = newShortLinks(PAGE_SIZE);
 
-        setupTemplateMock(shortLinks);
+        setupR2dbcEntityTemplateMock(shortLinks);
 
         Mono<ItemsPage<ShortLink>> result = urlShortenerService.getShortLinks(lastShortCode, PAGE_SIZE);
 
@@ -181,25 +205,47 @@ class UrlShortenerServiceImplTest {
     @Test
     void getOriginalUrlByShortCode() {
         String shortCode = "shortCode";
-        String expectedUrl = "https://example.com/original";
+        ShortLink expectedShortLink = newShortLink(shortCode, TEST_URI);
 
-        when(shortLinkRepository.findOriginalUrlByShortCode(eq(shortCode), any(Instant.class)))
-            .thenReturn(Mono.just(expectedUrl));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(shortCode)).thenReturn(Mono.empty());
+        when(valueOperations.set(eq(shortCode), eq(TEST_URI), any(Duration.class)))
+            .thenReturn(Mono.just(true));
+
+        when(shortLinkRepository.findByShortCode(shortCode))
+            .thenReturn(Mono.just(expectedShortLink));
 
         Mono<String> result = urlShortenerService.getOriginalUrlByShortCode(shortCode);
 
         StepVerifier.create(result)
-            .assertNext(originalUrl -> assertThat(originalUrl).isEqualTo(expectedUrl))
+            .assertNext(originalUrl -> assertThat(originalUrl).isEqualTo(TEST_URI))
             .verifyComplete();
 
-        verify(shortLinkRepository).findOriginalUrlByShortCode(eq(shortCode), any(Instant.class));
+        verify(shortLinkRepository).findByShortCode(shortCode);
+    }
+
+    @Test
+    void getOriginalUrlFromCache() {
+        String shortCode = "shortCode";
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(shortCode)).thenReturn(Mono.just(TEST_URI));
+
+        Mono<String> result = urlShortenerService.getOriginalUrlByShortCode(shortCode);
+
+        StepVerifier.create(result)
+            .assertNext(originalUrl -> assertThat(originalUrl).isEqualTo(TEST_URI))
+            .verifyComplete();
     }
 
     @Test
     void getOriginalUrlByShortCodeNotFound() {
         String nonExistentCode = "nonexistent";
 
-        when(shortLinkRepository.findOriginalUrlByShortCode(eq(nonExistentCode), any(Instant.class)))
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(nonExistentCode)).thenReturn(Mono.empty());
+
+        when(shortLinkRepository.findByShortCode(nonExistentCode))
             .thenReturn(Mono.empty());
 
         Mono<String> result = urlShortenerService.getOriginalUrlByShortCode(nonExistentCode);
@@ -208,12 +254,15 @@ class UrlShortenerServiceImplTest {
             .expectError(ObjectNotFoundException.class)
             .verify();
 
-        verify(shortLinkRepository).findOriginalUrlByShortCode(eq(nonExistentCode), any(Instant.class));
+        verify(shortLinkRepository).findByShortCode(nonExistentCode);
     }
 
     @Test
     void deleteByShortCode() {
         ShortLink expectedShortLink = newShortLink("shortCode", TEST_URI);
+
+        when(redisTemplate.delete("shortCode"))
+            .thenReturn(Mono.just(1L));
 
         when(shortLinkRepository.findByShortCode("shortCode"))
             .thenReturn(Mono.just(expectedShortLink));
@@ -248,8 +297,8 @@ class UrlShortenerServiceImplTest {
         return shortLink;
     }
 
-    private void setupTemplateMock(List<ShortLink> shortLinks) {
-        when(template.select(ShortLink.class)).thenReturn(reactiveSelect);
+    private void setupR2dbcEntityTemplateMock(List<ShortLink> shortLinks) {
+        when(r2dbcEntityTemplate.select(ShortLink.class)).thenReturn(reactiveSelect);
         when(reactiveSelect.matching(any(Query.class))).thenReturn(terminatingSelect);
         when(terminatingSelect.all()).thenReturn(Flux.fromIterable(shortLinks));
     }

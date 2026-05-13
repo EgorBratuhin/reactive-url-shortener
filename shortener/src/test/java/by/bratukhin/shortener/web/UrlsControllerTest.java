@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
 import by.bratukhin.shortener.configuration.SecurityConfig;
+import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.service.ObjectNotFoundException;
 import by.bratukhin.shortener.service.UrlShortenerService;
@@ -27,7 +28,7 @@ import by.bratukhin.shortener.support.ItemsPage;
 import reactor.core.publisher.Mono;
 
 @WebFluxTest(UrlsController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, ShortLinkConfigurationProperties.class})
 @WithMockUser(authorities = "SCOPE_url:manage")
 class UrlsControllerTest {
 
