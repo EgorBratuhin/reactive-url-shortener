@@ -66,11 +66,41 @@ services:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
       - shortener_keycloak_data:/opt/keycloak/data
 
+  shortener:
+    profiles:
+      - full
+    image: shortener:${SHORTENER_VERSION}
+    container_name: shortener-app
+    build:
+      context: ../shortener
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      BASE_DOMAIN: http://localhost:8080
+      SPRING_PROFILES_ACTIVE: prod
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/shortener
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8180/realms/shortener/protocol/openid-connect/certs
+
   cleanup-cron:
+    profiles:
+      - full
     image: alpine:3.23
     container_name: cleanup-cron
-    extra_hosts:
-      - "shortener:host-gateway"
     depends_on:
       keycloak:
         condition: service_healthy

@@ -14,6 +14,10 @@ java {
     }
 }
 
+tasks.bootJar {
+    archiveFileName.set("shortener.jar")
+}
+
 dependencyManagement {
     imports {
         mavenBom("org.springdoc:springdoc-openapi-bom:3.0.3")

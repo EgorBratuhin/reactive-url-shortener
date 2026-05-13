@@ -1,6 +1,6 @@
 short-link:
   cache-default-timeout: 1d
-  base-domain: http://localhost:8080
+  base-domain: ${BASE_DOMAIN:http://localhost:8080}
 server:
   http2:
     enabled: true
@@ -19,7 +19,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/shortener
+          jwk-set-uri: http://localhost:8180/realms/shortener/protocol/openid-connect/certs
 springdoc:
   api-docs:
     enabled: true
