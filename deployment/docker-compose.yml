@@ -88,7 +88,7 @@ services:
       - "8081:8081"
     environment:
       BASE_DOMAIN: http://localhost:8080
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: dev
       DB_USER: postgres
       DB_PASSWORD: postgres
       SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/shortener

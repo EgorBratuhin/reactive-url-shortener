@@ -6,11 +6,19 @@ modern backend patterns, focusing on scalability, type safety, and efficient dat
 ## 🚀 Tech Stack
 
 * **Java 25** (utilizing Foojay Toolchain for automatic provisioning)
-* **Spring Boot 4.0** (WebFlux, R2DBC)
-* **PostgreSQL 18** (Reactive driver)
+* **Spring Boot 4.0** (WebFlux, R2DBC, Security, Actuator)
+* **PostgreSQL 18** (Reactive driver via R2DBC)
+* **Redis 8** (Reactive cache via `spring-boot-starter-data-redis-reactive`)
+* **Keycloak 26** (OAuth2 / OIDC authentication and authorization)
+* **Flyway** (Database migrations in Docker)
 * **OpenAPI Generator** (API-first approach with reactive stubs)
+* **SpringDoc** (OpenAPI UI for manual testing)
 * **Lombok** (FieldNameConstants for type-safe database queries)
 * **Testcontainers** (Automated integration testing with real PostgreSQL instances)
+* **JaCoCo** (Code coverage enforcement — 80% minimum)
+* **Gatling** (Load and performance testing)
+* **ArchUnit** (Architectural tests)
+* **AspectJ** (AOP for cross-cutting concerns)
 
 ## 🛠 Key Architectural Features
 
@@ -29,6 +37,7 @@ Unlike traditional `OFFSET`-based pagination, this service implements **Keyset (
 
 * `:database` – Contains schema definitions and core R2DBC entity mappings.
 * `:shortener` – Houses the reactive business logic, service layer, and OpenAPI-generated controllers.
+* `:shortener.gatling` – Gatling load test scenarios.
 
 ### 3. API-First Development
 
@@ -47,29 +56,38 @@ The API is defined using **OpenAPI 3.0** (`api.yaml`). The build process automat
 
 ### Run Development Environment
 
-1. **Spin up the database:**
-   ```bash
-   docker compose up -d
-   ```
-2. **Build and generate API stubs:**
+1. **Build the application** (includes compilation, tests, and JaCoCo coverage check):
    ```bash
    ./gradlew build
    ```
-3. **Run the application:**
+2. **Start only infrastructure** (PostgreSQL, Redis, Keycloak, Flyway):
    ```bash
-   ./gradlew :shortener:bootRun
+   docker compose -f ./deployment/docker-compose.yml up -d
    ```
+3. **Run the full stack** (builds Docker image + starts application):
+   ```bash
+   docker compose -f ./deployment/docker-compose.yml --profile full up -d
+   ```
+
+### Keycloak Setup
+
+The Keycloak instance auto-imports a realm configuration from `deployment/keycloak/realm-export.json` on first start.
+The admin console is available at `http://localhost:8180` (admin / admin).
 
 ## 📊 Monitoring & Health
 
-The service includes **Spring Boot Actuator** and **Micrometer Prometheus** registry:
+The service includes **Spring Boot Actuator** and **Micrometer Prometheus** registry on a dedicated management port:
 
-* **Health Check:** `GET /actuator/health`
-* **Metrics:** `GET /actuator/prometheus`
+* **Health Check:** `GET http://localhost:8081/actuator/health`
+* **Metrics:** `GET http://localhost:8081/actuator/prometheus`
 
 ## 🧪 Testing
 
 The project uses **Testcontainers** to run tests against a real PostgreSQL instance in an isolated environment.
 
+Tests and JaCoCo coverage verification run automatically during `./gradlew build`.
+
 ```bash
-./gradlew test
+# Run Gatling load tests
+./gradlew gatlingRun
+```
