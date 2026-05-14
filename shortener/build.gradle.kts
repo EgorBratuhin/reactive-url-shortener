@@ -5,6 +5,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.openapi.generator") version "7.22.0"
     id("io.gatling.gradle") version "3.15.0.1"
+    id("info.solidsoft.pitest") version "1.19.0"
 }
 
 java {
@@ -57,6 +58,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-postgresql")
     testImplementation("org.testcontainers:testcontainers-r2dbc")
+    testImplementation(testlibs.pitest)
     testImplementation(testlibs.archunit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -168,4 +170,18 @@ gatling {
 
 dependencies {
     gatling("io.gatling.highcharts:gatling-charts-highcharts:3.15.0")
+}
+
+pitest {
+    excludedClasses.set(
+        listOf(
+            "by.bratukhin.shortener.model.**",
+            "by.bratukhin.shortener.configuration.**",
+            "by.bratukhin.api.**",
+            "**.*Dto*"
+        )
+    )
+
+    mutationThreshold.set(85)
+    coverageThreshold.set(90)
 }

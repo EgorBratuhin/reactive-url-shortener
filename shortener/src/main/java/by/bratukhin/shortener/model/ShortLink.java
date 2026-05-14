@@ -33,27 +33,24 @@ public class ShortLink extends AbstractDataObject {
         return shortCode;
     }
 
-    public ShortLink setShortCode(String shortCode) {
+    public void setShortCode(String shortCode) {
         this.shortCode = shortCode;
-        return this;
     }
 
     public String getOriginalUrl() {
         return originalUrl;
     }
 
-    public ShortLink setOriginalUrl(String originalUrl) {
+    public void setOriginalUrl(String originalUrl) {
         this.originalUrl = originalUrl;
-        return this;
     }
 
     public Instant getExpiresAt() {
         return expiresAt;
     }
 
-    public ShortLink setExpiresAt(Instant expiresAt) {
+    public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
-        return this;
     }
 
     ///

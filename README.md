@@ -16,6 +16,7 @@ modern backend patterns, focusing on scalability, type safety, and efficient dat
 * **Lombok** (FieldNameConstants for type-safe database queries)
 * **Testcontainers** (Automated integration testing with real PostgreSQL instances)
 * **JaCoCo** (Code coverage enforcement — 80% minimum)
+* **Pitest** (Mutation testing — 85% mutation coverage, 90% line coverage)
 * **Gatling** (Load and performance testing)
 * **ArchUnit** (Architectural tests)
 * **AspectJ** (AOP for cross-cutting concerns)
@@ -87,7 +88,14 @@ The project uses **Testcontainers** to run tests against a real PostgreSQL insta
 
 Tests and JaCoCo coverage verification run automatically during `./gradlew build`.
 
+### Run Gatling load tests
+
 ```bash
-# Run Gatling load tests
 ./gradlew gatlingRun
+```
+
+### Run Pitest mutation tests
+
+```bash
+./gradlew pitest
 ```

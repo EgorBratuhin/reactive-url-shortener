@@ -1,8 +1,10 @@
 [versions]
 archunit = "1.4.1"
+pitest = "1.2.3"
 
 [libraries]
 archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
+pitest = { module = "org.pitest:pitest-junit5-plugin", version.ref = "pitest" }
 
 [bundles]
 
