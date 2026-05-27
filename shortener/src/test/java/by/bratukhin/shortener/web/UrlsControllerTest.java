@@ -77,7 +77,7 @@ class UrlsControllerTest {
             """.formatted(TEST_URI);
 
         when(urlShortenerService.create(eq(URI.create(TEST_URI)), isNull(), eq("taken")))
-            .thenReturn(Mono.error(new DuplicateShortCodeException("taken")));
+            .thenReturn(Mono.error(new DuplicateShortCodeException("taken", null)));
 
         webTestClient.post()
             .uri("/api/v1/urls")

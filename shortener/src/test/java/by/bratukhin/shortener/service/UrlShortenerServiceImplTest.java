@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.core.ReactiveSelectOperation;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -111,8 +112,6 @@ class UrlShortenerServiceImplTest {
 
         when(shortLinkRepository.save(any(ShortLink.class)))
             .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(shortLinkRepository.existsByShortCode("shortCode"))
-            .thenReturn(Mono.just(false));
 
         Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), null, "shortCode");
 
@@ -260,8 +259,8 @@ class UrlShortenerServiceImplTest {
 
     @Test
     void createShortLinkWithDuplicateShortCode() {
-        when(shortLinkRepository.existsByShortCode("taken"))
-            .thenReturn(Mono.just(true));
+        when(shortLinkRepository.save(any(ShortLink.class)))
+            .thenReturn(Mono.error(new DataIntegrityViolationException("taken")));
 
         Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), TTL_SECONDS, "taken");
 

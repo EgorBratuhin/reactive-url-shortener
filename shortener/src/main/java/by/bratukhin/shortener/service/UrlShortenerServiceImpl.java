@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -60,18 +61,11 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     public Mono<ShortLink> create(URI uri, Integer ttlSeconds, String shortCode) {
         Argument.checkNotNullWithGenericMessage(uri, "uri");
 
-        Mono<ShortLink> creationFlow = Mono.fromCallable(() -> newShortLink(uri, ttlSeconds, shortCode))
+        return Mono.fromCallable(() -> newShortLink(uri, ttlSeconds, shortCode))
             .flatMap(shortLinkRepository::save)
+            .onErrorMap(DataIntegrityViolationException.class, e ->
+                new DuplicateShortCodeException(shortCode, e))
             .flatMap(this::cache);
-
-        if (shortCode == null) {
-            return creationFlow;
-        }
-
-        return shortLinkRepository.existsByShortCode(shortCode)
-            .flatMap(exists -> exists ?
-                Mono.error(new DuplicateShortCodeException(shortCode)) :
-                creationFlow);
     }
 
     private ShortLink newShortLink(URI uri, Integer ttlSeconds, String shortCode) {
