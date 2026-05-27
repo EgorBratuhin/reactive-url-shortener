@@ -32,8 +32,26 @@ jobs:
       - name: Build with Gradle Wrapper
         run: ./gradlew build
 
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report
+          path: shortener/build/reports/tests/**
+
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v7
+        with:
+          name: jacoco-report
+          path: shortener/build/reports/jacoco/**
+
       - name: PIT Mutation Testing
         run: ./gradlew pitest
+
+      - name: Upload PIT Report
+        uses: actions/upload-artifact@v7
+        with:
+          name: pitest-report
+          path: shortener/build/reports/pitest/**
 
   dependency-submission:
 
