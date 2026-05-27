@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import by.bratukhin.shortener.configuration.SecurityConfig;
 import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
 import by.bratukhin.shortener.model.ShortLink;
+import by.bratukhin.shortener.service.DuplicateShortCodeException;
 import by.bratukhin.shortener.service.ObjectNotFoundException;
 import by.bratukhin.shortener.service.UrlShortenerService;
 import by.bratukhin.shortener.support.ItemsPage;
@@ -45,12 +46,13 @@ class UrlsControllerTest {
         String request = """
             {
                 "url": "%s",
-                "ttlSeconds": 3600
+                "ttlSeconds": 3600,
+                "shortCode": "shortCode"
             }
             """.formatted(TEST_URI);
 
         ShortLink shortLink = newShortLink("0123456789012345678901", TEST_URI);
-        when(urlShortenerService.create(eq(URI.create(TEST_URI)), eq(3600)))
+        when(urlShortenerService.create(eq(URI.create(TEST_URI)), eq(3600), eq("shortCode")))
             .thenReturn(Mono.just(shortLink));
 
         webTestClient.post()
@@ -63,6 +65,29 @@ class UrlsControllerTest {
             .jsonPath("$.shortCode").isEqualTo("0123456789012345678901")
             .jsonPath("$.originalUrl").isEqualTo(TEST_URI)
             .jsonPath("$.shortUrl").isEqualTo("http://localhost/0123456789012345678901");
+    }
+
+    @Test
+    void createShortUrlDuplicateCode() {
+        String request = """
+            {
+                "url": "%s",
+                "shortCode": "taken"
+            }
+            """.formatted(TEST_URI);
+
+        when(urlShortenerService.create(eq(URI.create(TEST_URI)), isNull(), eq("taken")))
+            .thenReturn(Mono.error(new DuplicateShortCodeException("taken")));
+
+        webTestClient.post()
+            .uri("/api/v1/urls")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(request)
+            .exchange()
+            .expectStatus().isEqualTo(409)
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("SHORT_CODE_TAKEN")
+            .jsonPath("$.message").isEqualTo("Short code 'taken' is already in use");
     }
 
     @Test

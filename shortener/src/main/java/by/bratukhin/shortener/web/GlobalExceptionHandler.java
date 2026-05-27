@@ -19,6 +19,7 @@ import org.springframework.web.server.ServerWebInputException;
 import by.bratukhin.api.model.ErrorResponseDto;
 import by.bratukhin.api.model.FieldErrorDto;
 import by.bratukhin.api.model.ValidationErrorResponseDto;
+import by.bratukhin.shortener.service.DuplicateShortCodeException;
 import by.bratukhin.shortener.service.ObjectNotFoundException;
 import reactor.core.publisher.Mono;
 
@@ -31,6 +32,12 @@ class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     Mono<ErrorResponseDto> handleEntityNotFound(ObjectNotFoundException ex) {
         return Mono.just(new ErrorResponseDto("RESOURCE_NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateShortCodeException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    Mono<ErrorResponseDto> handleDuplicateShortCode(DuplicateShortCodeException ex) {
+        return Mono.just(new ErrorResponseDto("SHORT_CODE_TAKEN", ex.getMessage()));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

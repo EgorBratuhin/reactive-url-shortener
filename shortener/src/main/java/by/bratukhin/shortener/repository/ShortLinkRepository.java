@@ -24,4 +24,12 @@ public interface ShortLinkRepository extends R2dbcRepository<ShortLink, UUID> {
     ///
     Mono<ShortLink> findByShortCode(String shortCode);
 
+    ///
+    /// Checks whether a short code already exists.
+    ///
+    /// @param shortCode the short code to check; must not be null
+    /// @return a [Mono] emitting `true` if the code is already taken
+    ///
+    Mono<Boolean> existsByShortCode(String shortCode);
+
 }

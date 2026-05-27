@@ -59,7 +59,11 @@ public class UrlShortenerCrudStressTest extends Simulation {
         .exec(http("POST /api/v1/urls")
             .post("/api/v1/urls")
             .header("Authorization", _ -> "Bearer " + token)
-            .body(StringBody("{\"url\":\"#{longUrl}\",\"ttlSeconds\":#{ttlSeconds}}"))
+            .body(StringBody("""
+                {
+                "url":"#{longUrl}",
+                "ttlSeconds":#{ttlSeconds}
+                }"""))
             .asJson()
             .check(status().is(201))
             .check(jsonPath("$.shortCode").exists())

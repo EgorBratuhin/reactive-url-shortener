@@ -15,32 +15,38 @@ modern backend patterns, focusing on scalability, type safety, and efficient dat
 * **SpringDoc** (OpenAPI UI for manual testing)
 * **Lombok** (FieldNameConstants for type-safe database queries)
 * **Testcontainers** (Automated integration testing with real PostgreSQL instances)
-* **JaCoCo** (Code coverage enforcement — 80% minimum)
-* **Pitest** (Mutation testing — 85% mutation coverage, 90% line coverage)
+* **JaCoCo** (Code coverage enforcement - 80% minimum)
+* **Pitest** (Mutation testing - 85% mutation coverage, 90% line coverage)
 * **Gatling** (Load and performance testing)
 * **ArchUnit** (Architectural tests)
 * **AspectJ** (AOP for cross-cutting concerns)
 
 ## 🛠 Key Architectural Features
 
-### 1. Advanced Keyset Pagination
+### 1. Custom Short Codes with Automatic Fallback
+
+Users can provide their own short codes when creating a link. If omitted, a compact code is auto-generated:
+
+* **Auto-Generation:** 128-bit time-based UUIDs are compressed into 22-character Base62 strings (GMP alphabet) for compact,
+  user-friendly URLs.
+* **Custom Codes:** Arbitrary alphanumeric strings (`[0-9A-Za-z-_]+`, up to 200 chars) are accepted. Duplicate codes are rejected
+  with `409 Conflict`.
+
+### 2. Advanced Keyset Pagination
 
 Unlike traditional `OFFSET`-based pagination, this service implements **Keyset (Cursor) Pagination**:
 
 * **Performance:** Constant-time O(1) lookups regardless of page depth.
 * **UUID v7 Integration:** Identifiers are time-ordered (time-based epoch), ensuring natural chronological sorting in the
-  database.
-* **Base62 Encoding:** 128-bit UUIDs are compressed into 22-character strings (GMP alphabet) for short, user-friendly URLs while
-  maintaining lexicographical order for cursor stability.
-* **Padding:** Fixed-length codes (left-padded with '0') to ensure consistent string comparison in SQL queries.
+  database for stable cursor-based pagination.
 
-### 2. Multi-Module Project Structure
+### 3. Multi-Module Project Structure
 
 * `:database` – Contains schema definitions and core R2DBC entity mappings.
 * `:shortener` – Houses the reactive business logic, service layer, and OpenAPI-generated controllers.
 * `:shortener.gatling` – Gatling load test scenarios.
 
-### 3. API-First Development
+### 4. API-First Development
 
 The API is defined using **OpenAPI 3.0** (`api.yaml`). The build process automatically generates:
 

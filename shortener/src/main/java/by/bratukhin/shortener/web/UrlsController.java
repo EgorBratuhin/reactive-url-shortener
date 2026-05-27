@@ -41,9 +41,13 @@ class UrlsController implements UrlsApi {
         ServerWebExchange exchange) {
 
         return createUrlRequestDto
-            .flatMap(request -> urlShortenerService.create(request.getUrl(), request.getTtlSeconds()))
+            .flatMap(this::create)
             .map(this::toUrlMetadataDto)
             .map(body -> ResponseEntity.status(HttpStatus.CREATED).body(body));
+    }
+
+    private Mono<ShortLink> create(CreateUrlRequestDto request) {
+        return urlShortenerService.create(request.getUrl(), request.getTtlSeconds(), request.getShortCode());
     }
 
     @Override

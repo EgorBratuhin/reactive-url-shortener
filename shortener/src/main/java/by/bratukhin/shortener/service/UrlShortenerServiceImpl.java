@@ -20,6 +20,7 @@ import org.srplib.contract.Argument;
 import com.fasterxml.uuid.Generators;
 
 import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
+import by.bratukhin.shortener.model.AbstractDataObject;
 import by.bratukhin.shortener.model.ShortLink;
 import by.bratukhin.shortener.repository.ShortLinkRepository;
 import by.bratukhin.shortener.support.ItemsPage;
@@ -56,15 +57,24 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     @Override
     @Transactional
     @Observed(name = "links.created", contextualName = "creating-short-link")
-    public Mono<ShortLink> create(URI uri, Integer ttlSeconds) {
+    public Mono<ShortLink> create(URI uri, Integer ttlSeconds, String shortCode) {
         Argument.checkNotNullWithGenericMessage(uri, "uri");
 
-        return Mono.fromCallable(() -> newShortLink(uri, ttlSeconds))
+        Mono<ShortLink> creationFlow = Mono.fromCallable(() -> newShortLink(uri, ttlSeconds, shortCode))
             .flatMap(shortLinkRepository::save)
             .flatMap(this::cache);
+
+        if (shortCode == null) {
+            return creationFlow;
+        }
+
+        return shortLinkRepository.existsByShortCode(shortCode)
+            .flatMap(exists -> exists ?
+                Mono.error(new DuplicateShortCodeException(shortCode)) :
+                creationFlow);
     }
 
-    private ShortLink newShortLink(URI uri, Integer ttlSeconds) {
+    private ShortLink newShortLink(URI uri, Integer ttlSeconds, String shortCode) {
         UUID id = Generators.timeBasedEpochGenerator().generate();
 
         Instant expiresAt = ttlSeconds != null ?
@@ -74,7 +84,7 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
         ShortLink shortLink = new ShortLink();
         shortLink.setId(id);
         shortLink.setNew(true);
-        shortLink.setShortCode(shortCodeEncoder.encode(id));
+        shortLink.setShortCode(shortCode != null ? shortCode : shortCodeEncoder.encode(id));
         shortLink.setOriginalUrl(uri.toString());
         shortLink.setExpiresAt(expiresAt);
 
@@ -83,17 +93,17 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Mono<ItemsPage<ShortLink>> getShortLinks(String lastShortCode, int pageSize) {
+    public Mono<ItemsPage<ShortLink>> getShortLinks(String nextCursor, int pageSize) {
         Criteria criteria = Criteria.empty();
-        if (StringUtils.isNotBlank(lastShortCode)) {
-            criteria = Criteria.where(ShortLink.Fields.shortCode).lessThan(lastShortCode);
+        if (StringUtils.isNotBlank(nextCursor)) {
+            criteria = Criteria.where(AbstractDataObject.Fields.id).lessThan(nextCursor);
         }
 
         int limitWithNextPageIndicator = pageSize + 1;
 
         Query query = Query.query(criteria)
             .limit(limitWithNextPageIndicator)
-            .sort(Sort.by(ShortLink.Fields.shortCode).descending());
+            .sort(Sort.by(AbstractDataObject.Fields.id).descending());
 
         return r2dbcEntityTemplate.select(ShortLink.class)
             .matching(query)
@@ -107,7 +117,9 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
 
         List<ShortLink> data = hasNext ? list.subList(0, pageSize) : list;
 
-        String nextCursor = hasNext ? data.getLast().getShortCode() : null;
+        String nextCursor = hasNext ?
+            String.valueOf(data.getLast().getId()) :
+            null;
 
         return new ItemsPage<>(data, hasNext, nextCursor);
     }

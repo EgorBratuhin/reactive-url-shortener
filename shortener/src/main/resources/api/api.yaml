@@ -63,6 +63,15 @@ paths:
                     expiresAt: "2026-12-31T23:59:59Z"
         '400':
           $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Short code already taken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "SHORT_CODE_TAKEN"
+                message: "Short code 'myCode' is already in use"
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
         '500':
@@ -196,13 +205,10 @@ components:
       name: shortCode
       in: path
       required: true
-      description: Base62-encoded short code (22 alphanumeric characters)
+      description: Short code.
       schema:
         type: string
-        pattern: '^[0-9A-Za-z]{22}$'
-        minLength: 22
-        maxLength: 22
-        example: "0330bhML322HMHIolUI760"
+        minLength: 1
 
     NextCursor:
       name: nextCursor
@@ -233,9 +239,16 @@ components:
           format: uri
           description: Original URL to shorten
           example: "https://example.com/very/long/path"
+        shortCode:
+          type: string
+          description: Short code.
+          pattern: '^[0-9A-Za-z-_]+$'
+          minLength: 1
+          maxLength: 200
+          example: "0330bhML322HMHIolUI760"
         ttlSeconds:
           type: integer
-          description: Time-to-live in seconds (default 90 days)
+          description: Time-to-live in seconds
           minimum: 60
           maximum: 7776000
           example: 86400

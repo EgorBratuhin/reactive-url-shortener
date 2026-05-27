@@ -16,18 +16,19 @@ public interface UrlShortenerService {
     ///
     /// @param uri        the original URI to shorten; must not be null
     /// @param ttlSeconds the time-to-live duration in seconds
+    /// @param shortCode  short code
     /// @return a [Mono] emitting the created [ShortLink]
     ///
-    Mono<ShortLink> create(URI uri, Integer ttlSeconds);
+    Mono<ShortLink> create(URI uri, Integer ttlSeconds, String shortCode);
 
     ///
     /// Retrieves a paginated list of shortened links.
     ///
-    /// @param lastShortCode the short code of the last item from the previous page (cursor)
-    /// @param pageSize      the maximum number of items to return
+    /// @param nextCursor next cursor
+    /// @param pageSize   the maximum number of items to return
     /// @return a [Mono] emitting the [ItemsPage] containing [ShortLink] items
     ///
-    Mono<ItemsPage<ShortLink>> getShortLinks(String lastShortCode, int pageSize);
+    Mono<ItemsPage<ShortLink>> getShortLinks(String nextCursor, int pageSize);
 
     ///
     /// Retrieves metadata for a shortened link by its short code.

@@ -77,16 +77,17 @@ class UrlShortenerServiceImplTest {
         when(valueOperations.set(any(), any(), any(Duration.class)))
             .thenReturn(Mono.just(true));
 
-        when(shortCodeEncoder.encode(any(UUID.class))).thenReturn("shortCode");
+        when(shortCodeEncoder.encode(any(UUID.class))).thenReturn("generated-short-code");
+
         when(shortLinkRepository.save(any(ShortLink.class)))
             .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), TTL_SECONDS);
+        Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), TTL_SECONDS, null);
 
         StepVerifier.create(result)
             .assertNext(shortLink -> {
                 assertThat(shortLink.getOriginalUrl()).isEqualTo(TEST_URI);
-                assertThat(shortLink.getShortCode()).isEqualTo("shortCode");
+                assertThat(shortLink.getShortCode()).isEqualTo("generated-short-code");
                 assertThat(shortLink.isNew()).isTrue();
                 assertThat(shortLink.getExpiresAt())
                     .isAfter(Instant.now().plusSeconds(TTL_SECONDS - 1))
@@ -108,11 +109,12 @@ class UrlShortenerServiceImplTest {
         when(valueOperations.set(eq("shortCode"), eq(TEST_URI), any(Duration.class)))
             .thenReturn(Mono.just(true));
 
-        when(shortCodeEncoder.encode(any(UUID.class))).thenReturn("shortCode");
         when(shortLinkRepository.save(any(ShortLink.class)))
             .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(shortLinkRepository.existsByShortCode("shortCode"))
+            .thenReturn(Mono.just(false));
 
-        Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), null);
+        Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), null, "shortCode");
 
         StepVerifier.create(result)
             .assertNext(shortLink -> {
@@ -124,39 +126,38 @@ class UrlShortenerServiceImplTest {
             })
             .verifyComplete();
 
-        verify(shortCodeEncoder).encode(any(UUID.class));
         verify(shortLinkRepository).save(any(ShortLink.class));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = "lastShortCode")
+    @ValueSource(strings = "nextCursor")
     @NullSource
-    void getShortLinksPageWithNextCursor(String lastShortCode) {
+    void getShortLinksPageWithNextCursor(String nextCursor) {
         List<ShortLink> shortLinks = newShortLinks(PAGE_SIZE + 1);
 
         setupR2dbcEntityTemplateMock(shortLinks);
 
-        Mono<ItemsPage<ShortLink>> result = urlShortenerService.getShortLinks(lastShortCode, PAGE_SIZE);
+        Mono<ItemsPage<ShortLink>> result = urlShortenerService.getShortLinks(nextCursor, PAGE_SIZE);
 
         StepVerifier.create(result)
             .assertNext(page -> {
                 assertThat(page.hasNext()).isTrue();
                 assertThat(page.items()).hasSize(PAGE_SIZE);
                 assertThat(page.nextCursor())
-                    .isEqualTo(shortLinks.get(PAGE_SIZE - 1).getShortCode());
+                    .isEqualTo(String.valueOf(shortLinks.get(PAGE_SIZE - 1).getId()));
             })
             .verifyComplete();
     }
 
     @ParameterizedTest
-    @ValueSource(strings = "lastShortCode")
+    @ValueSource(strings = "nextCursor")
     @NullSource
-    void getShortLinksPageWithoutNextCursor(String lastShortCode) {
+    void getShortLinksPageWithoutNextCursor(String nextCursor) {
         List<ShortLink> shortLinks = newShortLinks(PAGE_SIZE);
 
         setupR2dbcEntityTemplateMock(shortLinks);
 
-        Mono<ItemsPage<ShortLink>> result = urlShortenerService.getShortLinks(lastShortCode, PAGE_SIZE);
+        Mono<ItemsPage<ShortLink>> result = urlShortenerService.getShortLinks(nextCursor, PAGE_SIZE);
 
         StepVerifier.create(result)
             .assertNext(page -> {
@@ -255,6 +256,18 @@ class UrlShortenerServiceImplTest {
             .verify();
 
         verify(shortLinkRepository).findByShortCode(nonExistentCode);
+    }
+
+    @Test
+    void createShortLinkWithDuplicateShortCode() {
+        when(shortLinkRepository.existsByShortCode("taken"))
+            .thenReturn(Mono.just(true));
+
+        Mono<ShortLink> result = urlShortenerService.create(URI.create(TEST_URI), TTL_SECONDS, "taken");
+
+        StepVerifier.create(result)
+            .expectError(DuplicateShortCodeException.class)
+            .verify();
     }
 
     @Test
