@@ -47,7 +47,8 @@ class UrlsController implements UrlsApi {
     }
 
     private Mono<ShortLink> create(CreateUrlRequestDto request) {
-        return urlShortenerService.create(request.getUrl(), request.getTtlSeconds(), request.getShortCode());
+        URI uri = URI.create(request.getUrl());
+        return urlShortenerService.create(uri, request.getTtlSeconds(), request.getShortCode());
     }
 
     @Override

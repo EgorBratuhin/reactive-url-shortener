@@ -236,8 +236,8 @@ components:
       properties:
         url:
           type: string
-          format: uri
-          description: Original URL to shorten
+          pattern: "^https?://.+"
+          description: Original URL to shorten. It must begin with http or https.
           example: "https://example.com/very/long/path"
         shortCode:
           type: string

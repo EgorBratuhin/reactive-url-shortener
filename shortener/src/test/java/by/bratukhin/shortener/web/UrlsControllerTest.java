@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
+import by.bratukhin.api.model.FieldErrorDto;
 import by.bratukhin.shortener.configuration.SecurityConfig;
 import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
 import by.bratukhin.shortener.model.ShortLink;
@@ -91,10 +92,32 @@ class UrlsControllerTest {
     }
 
     @Test
+    void createShortUrlWithInvalidScheme() {
+        String request = """
+            {
+                "url": "javascript:alert(1)"
+            }
+            """;
+
+        webTestClient.post()
+            .uri("/api/v1/urls")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(request)
+            .exchange()
+            .expectStatus().is4xxClientError()
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("VALIDATION_ERROR")
+            .jsonPath("$.errors[0]").isEqualTo(new FieldErrorDto(
+                "url",
+                "must match \"^https?://.+\"")
+                .code("Pattern"));
+    }
+
+    @Test
     void createShortUrlBadRequest() {
         String request = """
             {
-                "url": "^",
+                "url": "http://^",
                 "ttlSeconds": 3600
             }
             """;
