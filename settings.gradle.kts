@@ -12,5 +12,6 @@ dependencyResolutionManagement {
     }
 }
 
+include("meta-processor")
 include("shortener")
 include("database")

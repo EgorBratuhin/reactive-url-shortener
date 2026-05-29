@@ -4,13 +4,13 @@ import java.time.Instant;
 
 import org.springframework.data.relational.core.mapping.Table;
 
-import lombok.experimental.FieldNameConstants;
+import by.bratukhin.meta.GenerateFieldNames;
 
 ///
 /// Represents a short link mapping a unique short code to an original URL.
 ///
 @Table("short_links")
-@FieldNameConstants
+@GenerateFieldNames
 public class ShortLink extends AbstractDataObject {
 
     ///

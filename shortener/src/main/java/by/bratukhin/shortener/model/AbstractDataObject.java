@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 
-import lombok.experimental.FieldNameConstants;
+import by.bratukhin.meta.GenerateFieldNames;
 
 ///
 /// Base class for entities with a UUID identifier and automatic auditing.
@@ -17,7 +17,7 @@ import lombok.experimental.FieldNameConstants;
 /// Implements [Persistable] for correct "new/persisted" state management
 /// in Spring Data R2DBC via the `isNew` field.
 ///
-@FieldNameConstants
+@GenerateFieldNames
 public abstract class AbstractDataObject implements Persistable<UUID> {
 
     ///

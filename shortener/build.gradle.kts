@@ -45,9 +45,10 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     runtimeOnly("org.postgresql:r2dbc-postgresql")
-    compileOnly("org.projectlombok:lombok")
+    compileOnly(project(":meta-processor"))
+
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-    annotationProcessor("org.projectlombok:lombok")
+    annotationProcessor(project(":meta-processor"))
 
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-r2dbc-test")

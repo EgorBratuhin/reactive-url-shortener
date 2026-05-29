@@ -13,7 +13,7 @@ modern backend patterns, focusing on scalability, type safety, and efficient dat
 * **Flyway** (Database migrations in Docker)
 * **OpenAPI Generator** (API-first approach with reactive stubs)
 * **SpringDoc** (OpenAPI UI for manual testing)
-* **Lombok** (FieldNameConstants for type-safe database queries)
+* **Custom Annotation Processor** (`:meta-processor` - `@GenerateFieldNames` for type-safe field references)
 * **Testcontainers** (Automated integration testing with real PostgreSQL instances)
 * **JaCoCo** (Code coverage enforcement - 80% minimum)
 * **Pitest** (Mutation testing - 85% mutation coverage, 90% line coverage)
@@ -42,6 +42,8 @@ Unlike traditional `OFFSET`-based pagination, this service implements **Keyset (
 
 ### 3. Multi-Module Project Structure
 
+* `:meta-processor` – Custom annotation processor (`@GenerateFieldNames`)
+  that generates field-name constant classes at compile time.
 * `:database` – Contains schema definitions and core R2DBC entity mappings.
 * `:shortener` – Houses the reactive business logic, service layer, and OpenAPI-generated controllers.
 * `:shortener.gatling` – Gatling load test scenarios.

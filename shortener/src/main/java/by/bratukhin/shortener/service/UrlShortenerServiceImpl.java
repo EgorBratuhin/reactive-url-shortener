@@ -21,8 +21,9 @@ import org.srplib.contract.Argument;
 import com.fasterxml.uuid.Generators;
 
 import by.bratukhin.shortener.configuration.ShortLinkConfigurationProperties;
-import by.bratukhin.shortener.model.AbstractDataObject;
+import by.bratukhin.shortener.model.AbstractDataObject_;
 import by.bratukhin.shortener.model.ShortLink;
+import by.bratukhin.shortener.model.ShortLink_;
 import by.bratukhin.shortener.repository.ShortLinkRepository;
 import by.bratukhin.shortener.support.ItemsPage;
 import io.micrometer.observation.annotation.Observed;
@@ -90,14 +91,14 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     public Mono<ItemsPage<ShortLink>> getShortLinks(String nextCursor, int pageSize) {
         Criteria criteria = Criteria.empty();
         if (StringUtils.isNotBlank(nextCursor)) {
-            criteria = Criteria.where(AbstractDataObject.Fields.id).lessThan(nextCursor);
+            criteria = Criteria.where(AbstractDataObject_.id).lessThan(nextCursor);
         }
 
         int limitWithNextPageIndicator = pageSize + 1;
 
         Query query = Query.query(criteria)
             .limit(limitWithNextPageIndicator)
-            .sort(Sort.by(AbstractDataObject.Fields.id).descending());
+            .sort(Sort.by(AbstractDataObject_.id).descending());
 
         return r2dbcEntityTemplate.select(ShortLink.class)
             .matching(query)
@@ -121,7 +122,7 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     @Override
     @Transactional(readOnly = true)
     public Mono<ShortLink> getUrlMetadataByShortCode(String shortCode) {
-        Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
+        Argument.checkNotNullWithGenericMessage(shortCode, ShortLink_.shortCode);
 
         return shortLinkRepository.findByShortCode(shortCode)
             .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Url metadata not found '%s'".formatted(shortCode))));
@@ -130,7 +131,7 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     @Override
     @Transactional(propagation = Propagation.NEVER)
     public Mono<String> getOriginalUrlByShortCode(String shortCode) {
-        Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
+        Argument.checkNotNullWithGenericMessage(shortCode, ShortLink_.shortCode);
 
         return redisTemplate.opsForValue().get(shortCode)
             .switchIfEmpty(Mono.defer(() -> shortLinkRepository.findByShortCode(shortCode))
@@ -157,7 +158,7 @@ class UrlShortenerServiceImpl implements UrlShortenerService {
     @Override
     @Transactional
     public Mono<Void> deleteByShortCode(String shortCode) {
-        Argument.checkNotNullWithGenericMessage(shortCode, ShortLink.Fields.shortCode);
+        Argument.checkNotNullWithGenericMessage(shortCode, ShortLink_.shortCode);
 
         return getUrlMetadataByShortCode(shortCode)
             .flatMap(shortLinkRepository::delete)

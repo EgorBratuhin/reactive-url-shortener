@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import by.bratukhin.shortener.model.ShortLink;
+import by.bratukhin.shortener.model.ShortLink_;
 import reactor.core.publisher.Mono;
 
 ///
@@ -30,7 +31,7 @@ class ExpiredLinksCleanupServiceImpl implements ExpiredLinksCleanupService {
     @Override
     @Transactional
     public Mono<Long> cleanupExpired() {
-        Criteria criteria = Criteria.where(ShortLink.Fields.expiresAt).lessThan(Instant.now());
+        Criteria criteria = Criteria.where(ShortLink_.expiresAt).lessThan(Instant.now());
 
         return template.delete(Query.query(criteria), ShortLink.class)
             .doOnSuccess(count -> {
