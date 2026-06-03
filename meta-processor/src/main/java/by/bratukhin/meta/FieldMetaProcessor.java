@@ -10,7 +10,6 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.tools.Diagnostic;
 
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.FieldSpec;
@@ -22,7 +21,7 @@ import com.palantir.javapoet.TypeSpec;
 /// Annotation processor that generates field name constants classes for types
 /// annotated with [GenerateFieldNames].
 ///
-/// For each annotated type, a new class named `<TypeName>_` is generated in the same package.
+/// For each annotated type, a new class named `<TypeName>Fields` is generated in the same package.
 /// The generated class contains constants for every field declared in the original type.
 ///
 @AutoService(Processor.class)
@@ -32,17 +31,15 @@ public class FieldMetaProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         roundEnv.getElementsAnnotatedWith(GenerateFieldNames.class).stream()
-            .filter(element -> element instanceof TypeElement)
-            .map(element -> (TypeElement) element)
+            .filter(TypeElement.class::isInstance)
+            .map(TypeElement.class::cast)
             .forEach(typeElement -> {
                 try {
                     generateMetaClass(typeElement);
                 }
                 catch (Exception e) {
-                    processingEnv.getMessager().printMessage(
-                        Diagnostic.Kind.ERROR,
-                        "Failed to generate meta class: " + e.getMessage()
-                    );
+                    processingEnv.getMessager()
+                        .printError("Failed to generate meta class: " + e.getMessage());
                 }
             });
 
@@ -50,7 +47,7 @@ public class FieldMetaProcessor extends AbstractProcessor {
     }
 
     private void generateMetaClass(TypeElement typeElement) throws IOException {
-        String metaClassName = typeElement.getSimpleName().toString() + "_";
+        String metaClassName = typeElement.getSimpleName().toString() + "Fields";
 
         TypeSpec.Builder metaClassBuilder = TypeSpec.classBuilder(metaClassName)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -59,8 +56,8 @@ public class FieldMetaProcessor extends AbstractProcessor {
                 .build());
 
         typeElement.getEnclosedElements().stream()
-            .filter(enclosed -> enclosed instanceof VariableElement)
-            .map(enclosed -> (VariableElement) enclosed)
+            .filter(VariableElement.class::isInstance)
+            .map(VariableElement.class::cast)
             .map(variableElement -> variableElement.getSimpleName().toString())
             .map(FieldMetaProcessor::buildFieldSpec)
             .forEach(metaClassBuilder::addField);
