@@ -9,7 +9,7 @@ java {
     }
 }
 
-val javapoetVersion = "0.15.0"
+val javapoetVersion = "0.16.0"
 val googleAutoServiceVersion = "1.1.1"
 
 dependencies {

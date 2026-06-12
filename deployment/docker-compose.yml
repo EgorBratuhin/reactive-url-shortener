@@ -29,7 +29,7 @@ services:
     command: -url=jdbc:postgresql://postgres:5432/shortener -user=postgres -password=postgres migrate
 
   redis:
-    image: redis:8.6-alpine
+    image: redis:8.8-alpine
     container_name: shortener-redis_cache
     ports:
       - "6379:6379"
@@ -99,7 +99,7 @@ services:
   cleanup-cron:
     profiles:
       - full
-    image: alpine:3.23
+    image: alpine:3.24
     container_name: cleanup-cron
     depends_on:
       keycloak:

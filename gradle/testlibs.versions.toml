@@ -1,5 +1,5 @@
 [versions]
-archunit = "1.4.1"
+archunit = "1.4.2"
 pitest = "1.2.3"
 
 [libraries]

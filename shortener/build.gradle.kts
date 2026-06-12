@@ -1,10 +1,10 @@
 plugins {
     java
     jacoco
-    id("org.springframework.boot") version "4.0.6"
+    id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
-    id("org.openapi.generator") version "7.22.0"
-    id("io.gatling.gradle") version "3.15.0.1"
+    id("org.openapi.generator") version "7.23.0"
+    id("io.gatling.gradle") version "3.15.1"
     id("info.solidsoft.pitest") version "1.19.0"
 }
 
@@ -106,7 +106,7 @@ tasks.withType<Test> {
 }
 
 jacoco {
-    toolVersion = "0.8.13"
+    toolVersion = "0.8.14"
 }
 
 tasks.jacocoTestReport {
@@ -170,7 +170,7 @@ gatling {
 }
 
 dependencies {
-    gatling("io.gatling.highcharts:gatling-charts-highcharts:3.15.0")
+    gatling("io.gatling.highcharts:gatling-charts-highcharts:3.15.1")
 }
 
 pitest {

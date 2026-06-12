@@ -1,12 +1,12 @@
 # Reactive URL Shortener
 
-A high-performance, reactive URL shortening service built with **Spring Boot 4.0** and **Java 25**. This project demonstrates
+A high-performance, reactive URL shortening service built with **Spring Boot 4.1** and **Java 25**. This project demonstrates
 modern backend patterns, focusing on scalability, type safety, and efficient data retrieval.
 
 ## 🚀 Tech Stack
 
 * **Java 25** (utilizing Foojay Toolchain for automatic provisioning)
-* **Spring Boot 4.0** (WebFlux, R2DBC, Security, Actuator)
+* **Spring Boot 4.1** (WebFlux, R2DBC, Security, Actuator)
 * **PostgreSQL 18** (Reactive driver via R2DBC)
 * **Redis 8** (Reactive cache via `spring-boot-starter-data-redis-reactive`)
 * **Keycloak 26** (OAuth2 / OIDC authentication and authorization)
