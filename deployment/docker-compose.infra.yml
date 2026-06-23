@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: shortener-postgres-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - shortener_postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  flyway:
+    image: flyway/flyway:12-alpine
+    container_name: shortener-flyway-migration
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../database/migration:/flyway/sql
+    command: -url=jdbc:postgresql://postgres:5432/shortener -user=postgres -password=postgres migrate
+
+  redis:
+    image: redis:8.8-alpine
+    container_name: shortener-redis_cache
+    ports:
+      - "6379:6379"
+
+  keycloak:
+    image: keycloak/keycloak:26.6
+    container_name: keycloak-dev
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+      KC_HTTP_PORT: 8180
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT: "false"
+
+      KC_DB: dev-file
+
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_HTTP_METRICS_HISTOGRAMS_ENABLED: "true"
+
+    ports:
+      - "8180:8180"
+      - "9000:9000"
+
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --head -fsS http://localhost:9000/health/ready | echo $?" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - shortener_keycloak_data:/opt/keycloak/data
+
+volumes:
+  shortener_postgres_data:
+  shortener_keycloak_data:

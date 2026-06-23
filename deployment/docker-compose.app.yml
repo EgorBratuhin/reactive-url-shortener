@@ -1,0 +1,50 @@
+services:
+  shortener:
+    profiles:
+      - full
+    image: shortener:${SHORTENER_VERSION}
+    container_name: shortener-app
+    build:
+      context: ../shortener
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      BASE_DOMAIN: http://localhost:8080
+      SPRING_PROFILES_ACTIVE: prod
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/shortener
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8180/realms/shortener/protocol/openid-connect/certs
+      MANAGEMENT_METRICS_TAGS_NAMESPACE: default
+
+  cleanup-cron:
+    profiles:
+      - full
+    image: alpine:3.24
+    container_name: cleanup-cron
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ./cleanup-cron-setup.sh:/cleanup-cron-setup.sh
+      - ./cleanup-cron-task.sh:/cleanup-cron-task.sh
+    command: sh /cleanup-cron-setup.sh
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_URL: http://keycloak:8180
+      SHORTENER_URL: http://shortener:8080
+      CRON_CLIENT_ID: shortener-cron
+      CRON_CLIENT_SECRET: cron-secret
