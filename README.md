@@ -10,6 +10,8 @@ modern backend patterns, focusing on scalability, type safety, and efficient dat
 * **PostgreSQL 18** (Reactive driver via R2DBC)
 * **Redis 8** (Reactive cache via `spring-boot-starter-data-redis-reactive`)
 * **Keycloak 26** (OAuth2 / OIDC authentication and authorization)
+* **Prometheus** (Metrics collection and monitoring)
+* **Grafana** (Observability dashboards with pre-configured JVM and Spring Boot dashboards)
 * **Flyway** (Database migrations in Docker)
 * **OpenAPI Generator** (API-first approach with reactive stubs)
 * **SpringDoc** (OpenAPI UI for manual testing)
@@ -44,7 +46,7 @@ Unlike traditional `OFFSET`-based pagination, this service implements **Keyset (
 
 * `:meta-processor` – Custom annotation processor (`@GenerateFieldNames`)
   that generates field-name constant classes at compile time.
-* `:database` – Contains schema definitions and core R2DBC entity mappings.
+* `:database` – Contains Flyway database migration scripts.
 * `:shortener` – Houses the reactive business logic, service layer, and OpenAPI-generated controllers.
 * `:shortener.gatling` – Gatling load test scenarios.
 
@@ -89,6 +91,12 @@ The service includes **Spring Boot Actuator** and **Micrometer Prometheus** regi
 
 * **Health Check:** `GET http://localhost:8081/actuator/health`
 * **Metrics:** `GET http://localhost:8081/actuator/prometheus`
+
+Prometheus scrapes metrics from the management port, and
+**Grafana** provides pre-configured dashboards for JVM and Spring Boot metrics:
+
+* **Grafana:** `http://localhost:3000` (admin / admin)
+* **Prometheus:** `http://localhost:9090`
 
 ## 🧪 Testing
 

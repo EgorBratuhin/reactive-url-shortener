@@ -49,7 +49,8 @@ services:
       KC_DB: dev-file
 
       KC_HEALTH_ENABLED: "true"
-      KC_METRICS_ENABLED: "false"
+      KC_METRICS_ENABLED: "true"
+      KC_HTTP_METRICS_HISTOGRAMS_ENABLED: "true"
 
     ports:
       - "8180:8180"
@@ -95,6 +96,36 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8180/realms/shortener/protocol/openid-connect/certs
+      MANAGEMENT_METRICS_TAGS_NAMESPACE: default
+
+  prometheus:
+    image: prom/prometheus:v3.12.0
+    container_name: shortener-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - shortener_prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+  grafana:
+    image: grafana/grafana:13.0.2
+    container_name: shortener-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - shortener_grafana_data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: ""
+    depends_on:
+      prometheus:
+        condition: service_started
 
   cleanup-cron:
     profiles:
@@ -118,3 +149,5 @@ services:
 volumes:
   shortener_postgres_data:
   shortener_keycloak_data:
+  shortener_prometheus_data:
+  shortener_grafana_data:

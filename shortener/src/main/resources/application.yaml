@@ -41,3 +41,7 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        links.created: true
+        links.resolved: true
